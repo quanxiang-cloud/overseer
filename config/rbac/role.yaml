@@ -1,0 +1,34 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - overseer.quanxiang.cloud.io
+  resources:
+  - overseers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - overseer.quanxiang.cloud.io
+  resources:
+  - overseers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - overseer.quanxiang.cloud.io
+  resources:
+  - overseers/status
+  verbs:
+  - get
+  - patch
+  - update

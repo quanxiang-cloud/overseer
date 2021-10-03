@@ -1,0 +1,16 @@
+domain: quanxiang.cloud.io
+layout:
+- go.kubebuilder.io/v3
+projectName: overseer
+repo: github.com/quanxiang-cloud/overseer
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: quanxiang.cloud.io
+  group: overseer
+  kind: Overseer
+  path: github.com/quanxiang-cloud/overseer/api/v1alpha1
+  version: v1alpha1
+version: "3"

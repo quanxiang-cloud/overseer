@@ -1,0 +1,20 @@
+# permissions for end users to view overseers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: overseer-viewer-role
+rules:
+- apiGroups:
+  - overseer.quanxiang.cloud.io
+  resources:
+  - overseers
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - overseer.quanxiang.cloud.io
+  resources:
+  - overseers/status
+  verbs:
+  - get

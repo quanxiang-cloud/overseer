@@ -36,10 +36,27 @@ spec:
           spec:
             description: OverseerRunSpec defines the desired state of OverseerRun
             properties:
-              foo:
-                description: Foo is an example field of OverseerRun. Edit overseerrun_types.go
-                  to remove/update
-                type: string
+              overseerRef:
+                description: OverseerRef can be used to refer to a specific instance
+                  of a Overseer
+                properties:
+                  name:
+                    description: Name of the referent
+                    type: string
+                type: object
+              params:
+                description: Params is a list of parameter names and values.
+                items:
+                  description: Param declares an value to use for the parameter called
+                    name.
+                  properties:
+                    name:
+                      type: string
+                    value:
+                      description: Value is from default or user-input.
+                      type: string
+                  type: object
+                type: array
             type: object
           status:
             description: OverseerRunStatus defines the observed state of OverseerRun

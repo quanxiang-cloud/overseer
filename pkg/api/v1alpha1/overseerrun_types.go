@@ -28,8 +28,11 @@ type OverseerRunSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of OverseerRun. Edit overseerrun_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// +optional
+	OverseerRef *OverseerRef `json:"overseerRef,omitempty"`
+
+	// Params is a list of parameter names and values.
+	Params []Param `json:"params,omitempty"`
 }
 
 // OverseerRunStatus defines the observed state of OverseerRun
@@ -57,4 +60,10 @@ type OverseerRunList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []OverseerRun `json:"items"`
+}
+
+// OverseerRef can be used to refer to a specific instance of a Overseer
+type OverseerRef struct {
+	// Name of the referent
+	Name string `json:"name,omitempty"`
 }

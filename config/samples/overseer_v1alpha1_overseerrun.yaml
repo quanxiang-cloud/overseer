@@ -3,5 +3,8 @@ kind: OverseerRun
 metadata:
   name: overseerrun-sample
 spec:
-  # Add fields here
-  foo: bar
+  overseerRef:
+    name: overseer-sample
+  params:
+    - name: FOO
+      value: bar

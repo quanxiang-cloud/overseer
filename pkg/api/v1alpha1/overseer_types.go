@@ -28,8 +28,17 @@ type OverseerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Overseer. Edit overseer_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Description is a user-facing description of the oversser.
+	// +optional
+	Description string `json:"description,omitempty"`
+
+	// Params declares a list of input parameters that must be supplied when
+	// this overseer is run.
+	// +optional
+	Params []ParamSpec `json:"params,omitempty"`
+
+	// Steps are the steps of the overseer.
+	Steps []StepSpec `json:"steps,omitempty"`
 }
 
 // OverseerStatus defines the observed state of Overseer

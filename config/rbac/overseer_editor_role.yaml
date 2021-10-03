@@ -5,7 +5,7 @@ metadata:
   name: overseer-editor-role
 rules:
 - apiGroups:
-  - overseer.quanxiang.cloud.io
+  - quanxiang.cloud.io
   resources:
   - overseers
   verbs:
@@ -17,7 +17,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - overseer.quanxiang.cloud.io
+  - quanxiang.cloud.io
   resources:
   - overseers/status
   verbs:

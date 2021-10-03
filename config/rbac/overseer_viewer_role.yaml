@@ -5,7 +5,7 @@ metadata:
   name: overseer-viewer-role
 rules:
 - apiGroups:
-  - overseer.quanxiang.cloud.io
+  - quanxiang.cloud.io
   resources:
   - overseers
   verbs:
@@ -13,7 +13,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - overseer.quanxiang.cloud.io
+  - quanxiang.cloud.io
   resources:
   - overseers/status
   verbs:

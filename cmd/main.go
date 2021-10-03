@@ -32,7 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	overseerv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
-	"github.com/quanxiang-cloud/overseer/pkg/reconciler"
+	"github.com/quanxiang-cloud/overseer/pkg/reconciler/overseerrun"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -78,7 +78,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&reconciler.OverseerReconciler{
+	if err = (&overseerrun.OverseerRunReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {

@@ -1,34 +1,20 @@
-
----
+# permissions for end users to view overseerruns.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
-  name: manager-role
+  name: overseerrun-viewer-role
 rules:
 - apiGroups:
   - quanxiang.cloud.io
   resources:
   - overseerruns
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
-- apiGroups:
-  - quanxiang.cloud.io
-  resources:
-  - overseerruns/finalizers
-  verbs:
-  - update
 - apiGroups:
   - quanxiang.cloud.io
   resources:
   - overseerruns/status
   verbs:
   - get
-  - patch
-  - update

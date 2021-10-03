@@ -1,0 +1,7 @@
+apiVersion: quanxiang.cloud.io/v1alpha1
+kind: OverseerRun
+metadata:
+  name: overseerrun-sample
+spec:
+  # Add fields here
+  foo: bar

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package reconciler
+package overseerrun
 
 import (
 	"context"
@@ -27,26 +27,26 @@ import (
 	overseerv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
 )
 
-// OverseerReconciler reconciles a Overseer object
-type OverseerReconciler struct {
+// OverseerRunReconciler reconciles a OverseerRun object
+type OverseerRunReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=quanxiang.cloud.io,resources=overseers,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=quanxiang.cloud.io,resources=overseers/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=quanxiang.cloud.io,resources=overseers/finalizers,verbs=update
+//+kubebuilder:rbac:groups=quanxiang.cloud.io,resources=overseerruns,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=quanxiang.cloud.io,resources=overseerruns/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=quanxiang.cloud.io,resources=overseerruns/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the Overseer object against the actual cluster state, and then
+// the OverseerRun object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
-func (r *OverseerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
 	// your logic here
@@ -55,8 +55,8 @@ func (r *OverseerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *OverseerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *OverseerRunReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&overseerv1alpha1.Overseer{}).
+		For(&overseerv1alpha1.OverseerRun{}).
 		Complete(r)
 }

@@ -19,18 +19,32 @@ package overseerrun
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	overseerv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
+	"github.com/go-logr/logr"
+	overseerRun "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
+	overseerRunV1alpha1 "github.com/quanxiang-cloud/overseer/pkg/listers/v1alpha1"
 )
 
 // OverseerRunReconciler reconciles a OverseerRun object
 type OverseerRunReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	Log    logr.Logger
+	lister overseerRunV1alpha1.OverseerLister
+}
+
+func NewOverseerRunReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger, lister overseerRunV1alpha1.OverseerLister) *OverseerRunReconciler {
+	return &OverseerRunReconciler{
+		Client: client,
+		Scheme: scheme,
+		Log:    logger.WithName("OverseerRun"),
+		lister: lister,
+	}
 }
 
 //+kubebuilder:rbac:groups=quanxiang.cloud.io,resources=overseerruns,verbs=get;list;watch;create;update;patch;delete
@@ -47,9 +61,17 @@ type OverseerRunReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
+	logger = logger.WithName("Reconcile")
 
-	// your logic here
+	var osr overseerRun.OverseerRun
+	err := r.Get(ctx, req.NamespacedName, &osr)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -57,6 +79,6 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 // SetupWithManager sets up the controller with the Manager.
 func (r *OverseerRunReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&overseerv1alpha1.OverseerRun{}).
+		For(&overseerRun.OverseerRun{}).
 		Complete(r)
 }

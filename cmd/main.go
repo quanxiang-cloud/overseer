@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"os"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -32,6 +33,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	overseerv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
+	"github.com/quanxiang-cloud/overseer/pkg/client/clientset"
+	"github.com/quanxiang-cloud/overseer/pkg/client/informers"
+	overseerInformers "github.com/quanxiang-cloud/overseer/pkg/client/informers/overseer"
+	listersv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/listers/v1alpha1"
 	"github.com/quanxiang-cloud/overseer/pkg/reconciler/overseerrun"
 	//+kubebuilder:scaffold:imports
 )
@@ -40,6 +45,8 @@ var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
 )
+
+var ()
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
@@ -52,11 +59,13 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
+	var defaultResync time.Duration
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+	flag.DurationVar(&defaultResync, "default-resync", time.Duration(30)*time.Second, "")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -78,10 +87,23 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&overseerrun.OverseerRunReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	client, err := clientset.NewForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to get client set")
+		os.Exit(1)
+	}
+
+	indexer := overseerInformers.New(informers.NewSharedInformerFactory(client, 0), nil).
+		V1alpha1().Overseer().
+		Informer().
+		GetIndexer()
+
+	if err = overseerrun.NewOverseerRunReconciler(
+		mgr.GetClient(),
+		mgr.GetScheme(),
+		ctrl.Log.WithName("OverseerRun"),
+		listersv1alpha1.NewPipelineLister(indexer),
+	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Overseer")
 		os.Exit(1)
 	}

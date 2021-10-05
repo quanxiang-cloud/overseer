@@ -38,7 +38,10 @@ import (
 	overseerInformers "github.com/quanxiang-cloud/overseer/pkg/client/informers/overseer"
 	listersv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/listers/v1alpha1"
 	"github.com/quanxiang-cloud/overseer/pkg/reconciler/overseerrun"
+
 	//+kubebuilder:scaffold:imports
+
+	pipeline1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 var (
@@ -46,13 +49,13 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 )
 
-var ()
-
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(overseerv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
+
+	utilruntime.Must(pipeline1beta1.AddToScheme(scheme))
 }
 
 func main() {
@@ -93,9 +96,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	indexer := overseerInformers.New(informers.NewSharedInformerFactory(client, 0), nil).
+	informer := overseerInformers.New(informers.NewSharedInformerFactory(client, defaultResync), nil).
 		V1alpha1().Overseer().
-		Informer().
+		Informer()
+
+	indexer := informer.
 		GetIndexer()
 
 	if err = overseerrun.NewOverseerRunReconciler(
@@ -117,6 +122,12 @@ func main() {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
+
+	stopCh := make(chan struct{})
+	defer func() {
+		stopCh <- struct{}{}
+	}()
+	go informer.Run(stopCh)
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

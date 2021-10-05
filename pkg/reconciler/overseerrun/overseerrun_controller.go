@@ -26,24 +26,27 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/go-logr/logr"
-	overseerRun "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
+	osv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
 	overseerRunV1alpha1 "github.com/quanxiang-cloud/overseer/pkg/listers/v1alpha1"
+	"github.com/quanxiang-cloud/overseer/pkg/materials"
 )
 
 // OverseerRunReconciler reconciles a OverseerRun object
 type OverseerRunReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
-	Log    logr.Logger
-	lister overseerRunV1alpha1.OverseerLister
+	Scheme    *runtime.Scheme
+	Log       logr.Logger
+	lister    overseerRunV1alpha1.OverseerLister
+	materials materials.Interface
 }
 
 func NewOverseerRunReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger, lister overseerRunV1alpha1.OverseerLister) *OverseerRunReconciler {
 	return &OverseerRunReconciler{
-		Client: client,
-		Scheme: scheme,
-		Log:    logger.WithName("OverseerRun"),
-		lister: lister,
+		Client:    client,
+		Scheme:    scheme,
+		Log:       logger.WithName("OverseerRun"),
+		lister:    lister,
+		materials: materials.New(),
 	}
 }
 
@@ -64,7 +67,7 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	logger := log.FromContext(ctx)
 	logger = logger.WithName("Reconcile")
 
-	var osr overseerRun.OverseerRun
+	var osr osv1alpha1.OverseerRun
 	err := r.Get(ctx, req.NamespacedName, &osr)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -73,12 +76,46 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
+	overseer, err := r.lister.Overseers(req.Namespace).Get(osr.Spec.OverseerRef.Name)
+	if err != nil {
+		// TODO  should set status and reason
+		return ctrl.Result{}, err
+	}
+
+	err = r.reconcileOverseer(ctx, overseer)
+	if err != nil {
+		// TODO  should set status and reason
+		return ctrl.Result{}, err
+	}
+
 	return ctrl.Result{}, nil
+}
+
+func (r *OverseerRunReconciler) reconcileOverseer(ctx context.Context, overseer *osv1alpha1.Overseer) error {
+	log := r.Log.WithName("reconcileOverseer")
+
+	for _, step := range overseer.Spec.Steps {
+		obj, err := r.materials.V1alpha1().
+			Body([]byte(step.Template)).
+			Param(overseer.Spec.Params).
+			Do()
+
+		if err != nil {
+			return err
+		}
+
+		if err = r.Create(ctx, obj); err != nil {
+			log.Error(err, "Failed to create obj")
+			return err
+		}
+	}
+
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *OverseerRunReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&overseerRun.OverseerRun{}).
+		For(&osv1alpha1.OverseerRun{}).
 		Complete(r)
 }

@@ -32,8 +32,9 @@ spec:
           kind: TaskRun
           metadata:
              name: overseer-sample
-          taskRef:
-            - name: overseer-sample
-              params:
-                - name: foo
-                  value: $(params.FOO)
+          spec:
+            taskRef:
+              name: overseer-sample
+            params:
+              - name: foo
+                value: $(params.FOO)

@@ -19,17 +19,12 @@ func New() *materialsv1alpha1 {
 	return &materialsv1alpha1{}
 }
 
-func (m *materialsv1alpha1) Namespace(ns string) Interface {
-	m.namespace = ns
-	return m
-}
-
 func (m *materialsv1alpha1) Body(body []byte) Interface {
 	m.body = body
 	return m
 }
 
-func (m *materialsv1alpha1) Do() (client.Object, error) {
+func (m *materialsv1alpha1) Do(opts ...artifactsv1alpha1.Options) (client.Object, error) {
 	if m.body == nil {
 		return nil, nil
 	}
@@ -53,6 +48,10 @@ func (m *materialsv1alpha1) Do() (client.Object, error) {
 	err = m.unmarshal(obj)
 	if err != nil {
 		return nil, err
+	}
+
+	for _, opt := range opts {
+		opt(obj)
 	}
 	return obj, nil
 }

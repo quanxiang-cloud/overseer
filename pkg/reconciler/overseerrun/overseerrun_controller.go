@@ -27,6 +27,7 @@ import (
 
 	"github.com/go-logr/logr"
 	osv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
+	artifactsv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/artifacts/v1alpha1"
 	overseerRunV1alpha1 "github.com/quanxiang-cloud/overseer/pkg/listers/v1alpha1"
 	"github.com/quanxiang-cloud/overseer/pkg/materials"
 )
@@ -98,7 +99,7 @@ func (r *OverseerRunReconciler) reconcileOverseer(ctx context.Context, overseer 
 		obj, err := r.materials.V1alpha1().
 			Body([]byte(step.Template)).
 			Param(overseer.Spec.Params).
-			Do()
+			Do(artifactsv1alpha1.WithNamespace(overseer.Namespace))
 
 		if err != nil {
 			return err

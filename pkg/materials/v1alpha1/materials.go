@@ -13,8 +13,7 @@ import (
 )
 
 type materialsv1alpha1 struct {
-	body      []byte
-	namespace string
+	body []byte
 
 	params []apiv1alpha1.Param
 }

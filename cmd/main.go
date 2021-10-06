@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"os"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -32,8 +33,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	overseerv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
-	"github.com/quanxiang-cloud/overseer/pkg/reconciler"
+	"github.com/quanxiang-cloud/overseer/pkg/client/clientset"
+	"github.com/quanxiang-cloud/overseer/pkg/client/informers"
+	overseerInformers "github.com/quanxiang-cloud/overseer/pkg/client/informers/overseer"
+	listersv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/listers/v1alpha1"
+	"github.com/quanxiang-cloud/overseer/pkg/reconciler/overseerrun"
+
 	//+kubebuilder:scaffold:imports
+
+	pipeline1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 var (
@@ -46,17 +54,21 @@ func init() {
 
 	utilruntime.Must(overseerv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
+
+	utilruntime.Must(pipeline1beta1.AddToScheme(scheme))
 }
 
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
+	var defaultResync time.Duration
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+	flag.DurationVar(&defaultResync, "default-resync", time.Duration(30)*time.Second, "")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -78,10 +90,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&reconciler.OverseerReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	client, err := clientset.NewForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to get client set")
+		os.Exit(1)
+	}
+
+	informer := overseerInformers.New(informers.NewSharedInformerFactory(client, defaultResync), nil).
+		V1alpha1().Overseer().
+		Informer()
+
+	indexer := informer.
+		GetIndexer()
+
+	if err = overseerrun.NewOverseerRunReconciler(
+		mgr.GetClient(),
+		mgr.GetScheme(),
+		ctrl.Log.WithName("OverseerRun"),
+		listersv1alpha1.NewPipelineLister(indexer),
+	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Overseer")
 		os.Exit(1)
 	}
@@ -95,6 +122,12 @@ func main() {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
+
+	stopCh := make(chan struct{})
+	defer func() {
+		stopCh <- struct{}{}
+	}()
+	go informer.Run(stopCh)
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

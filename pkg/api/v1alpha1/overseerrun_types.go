@@ -23,26 +23,20 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// OverseerSpec defines the desired state of Overseer
-type OverseerSpec struct {
+// OverseerRunSpec defines the desired state of OverseerRun
+type OverseerRunSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Description is a user-facing description of the oversser.
 	// +optional
-	Description string `json:"description,omitempty"`
+	OverseerRef *OverseerRef `json:"overseerRef,omitempty"`
 
-	// Params declares a list of input parameters that must be supplied when
-	// this overseer is run.
-	// +optional
-	Params []ParamSpec `json:"params,omitempty"`
-
-	// Steps are the steps of the overseer.
-	Steps []StepSpec `json:"steps,omitempty"`
+	// Params is a list of parameter names and values.
+	Params []Param `json:"params,omitempty"`
 }
 
-// OverseerStatus defines the observed state of Overseer
-type OverseerStatus struct {
+// OverseerRunStatus defines the observed state of OverseerRun
+type OverseerRunStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
@@ -50,20 +44,26 @@ type OverseerStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Overseer is the Schema for the overseers API
-type Overseer struct {
+// OverseerRun is the Schema for the overseerruns API
+type OverseerRun struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   OverseerSpec   `json:"spec,omitempty"`
-	Status OverseerStatus `json:"status,omitempty"`
+	Spec   OverseerRunSpec   `json:"spec,omitempty"`
+	Status OverseerRunStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// OverseerList contains a list of Overseer
-type OverseerList struct {
+// OverseerRunList contains a list of OverseerRun
+type OverseerRunList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Overseer `json:"items"`
+	Items           []OverseerRun `json:"items"`
+}
+
+// OverseerRef can be used to refer to a specific instance of a Overseer
+type OverseerRef struct {
+	// Name of the referent
+	Name string `json:"name,omitempty"`
 }

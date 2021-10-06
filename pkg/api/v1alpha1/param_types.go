@@ -1,5 +1,10 @@
 package v1alpha1
 
+import (
+	"fmt"
+	"strings"
+)
+
 // ParamSpec defines parameters needed beyond typed inputs.
 type ParamSpec struct {
 
@@ -21,4 +26,28 @@ type Param struct {
 
 	// Value is from default or user-input.
 	Value string `json:"value,omitempty"`
+}
+
+func paramReference(str string) string {
+	return strings.TrimSuffix(strings.TrimPrefix(str, "$(params."), "[*])")
+}
+
+func ParamsValidate(dst []Param, src []ParamSpec) error {
+	dic := make(map[string]string, len(src))
+	for _, elem := range src {
+		dic[elem.Name] = elem.Default
+	}
+
+	for i, elem := range dst {
+		if strings.HasPrefix(elem.Value, "$") {
+			name := paramReference(elem.Value)
+			df, ok := dic[name]
+			if !ok {
+				return fmt.Errorf("param [%s] is needed", name)
+			}
+			dst[i].Value = df
+		}
+	}
+
+	return nil
 }

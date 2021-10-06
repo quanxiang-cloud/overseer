@@ -1,0 +1,10 @@
+apiVersion: quanxiang.cloud.io/v1alpha1
+kind: OverseerRun
+metadata:
+  name: overseerrun-sample
+spec:
+  overseerRef:
+    name: overseer-sample
+  params:
+    - name: FOO
+      value: bar

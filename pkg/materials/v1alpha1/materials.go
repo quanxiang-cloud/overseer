@@ -1,7 +1,9 @@
 package v1alpha1
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 
 	"github.com/ghodss/yaml"
 	apiv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
@@ -13,6 +15,8 @@ import (
 type materialsv1alpha1 struct {
 	body      []byte
 	namespace string
+
+	params []apiv1alpha1.Param
 }
 
 func New() *materialsv1alpha1 {
@@ -29,11 +33,17 @@ func (m *materialsv1alpha1) Do(opts ...artifactsv1alpha1.Options) (client.Object
 		return nil, nil
 	}
 
+	err := m.param()
+	if err != nil {
+		return nil, err
+	}
+
 	typeMeta := &struct {
 		APIVersion string `yaml:"apiVersion,omitempty"`
 		Kind       string `yaml:"kind,omitempty"`
 	}{}
-	err := yaml.Unmarshal(m.body, typeMeta)
+
+	err = yaml.Unmarshal(m.body, typeMeta)
 	if err != nil {
 		return nil, err
 	}
@@ -56,9 +66,44 @@ func (m *materialsv1alpha1) Do(opts ...artifactsv1alpha1.Options) (client.Object
 	return obj, nil
 }
 
-func (m *materialsv1alpha1) Param(params []apiv1alpha1.ParamSpec) Interface {
-	// e.body = execute(paramsSliceToMap(params), string(e.body))
+func (m *materialsv1alpha1) Param(params []apiv1alpha1.Param) Interface {
+	m.params = params
 	return m
+}
+
+func (m *materialsv1alpha1) param() error {
+	kv := make(map[string]string, len(m.params))
+	for _, param := range m.params {
+		kv[param.Name] = param.Value
+	}
+
+	body, err := templateExecute(kv, string(m.body))
+	if err != nil {
+		return err
+	}
+
+	m.body = []byte(body)
+	return nil
+}
+
+func templateExecute(values interface{}, tmpl string) (string, error) {
+	var err error
+	buf := &bytes.Buffer{}
+
+	tf := template.New("")
+	tf.Delims("$(params", ")")
+
+	tf, err = tf.Parse(string(tmpl))
+	if err != nil {
+		return tmpl, err
+	}
+
+	err = tf.Execute(buf, values)
+	if err != nil {
+		return tmpl, err
+	}
+
+	return buf.String(), nil
 }
 
 func (m *materialsv1alpha1) unmarshal(ptr interface{}) error {

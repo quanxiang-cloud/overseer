@@ -8,6 +8,6 @@ import (
 
 type Interface interface {
 	Body(body []byte) Interface
-	Param(params []apiv1alpha1.ParamSpec) Interface
+	Param(params []apiv1alpha1.Param) Interface
 	Do(...artifactsv1alpha1.Options) (client.Object, error)
 }

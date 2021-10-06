@@ -77,29 +77,46 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	overseer, err := r.lister.Overseers(req.Namespace).Get(osr.Spec.OverseerRef.Name)
+	err = r.reconcile(ctx, osr)
 	if err != nil {
-		// TODO  should set status and reason
-		return ctrl.Result{}, err
+		return ctrl.Result{}, nil
 	}
 
-	err = r.reconcileOverseer(ctx, overseer)
-	if err != nil {
-		// TODO  should set status and reason
-		return ctrl.Result{}, err
-	}
-
+	// TODO osr	status
 	return ctrl.Result{}, nil
 }
 
-func (r *OverseerRunReconciler) reconcileOverseer(ctx context.Context, overseer *osv1alpha1.Overseer) error {
+func (r *OverseerRunReconciler) reconcile(ctx context.Context, osr osv1alpha1.OverseerRun) error {
+	overseer, err := r.lister.Overseers(osr.Namespace).Get(osr.Spec.OverseerRef.Name)
+	if err != nil {
+		return err
+	}
+
+	err = osv1alpha1.ParamsValidate(osr.Spec.Params, overseer.Spec.Params)
+	if err != nil {
+		// TODO params error state
+		return err
+	}
+
+	err = r.reconcileOverseer(ctx, osr, overseer)
+	if err != nil {
+		// TODO  should set status and reason
+		return err
+	}
+
+	return nil
+}
+
+func (r *OverseerRunReconciler) reconcileOverseer(ctx context.Context, osr osv1alpha1.OverseerRun, overseer *osv1alpha1.Overseer) error {
 	log := r.Log.WithName("reconcileOverseer")
 
 	for _, step := range overseer.Spec.Steps {
 		obj, err := r.materials.V1alpha1().
 			Body([]byte(step.Template)).
-			Param(overseer.Spec.Params).
-			Do(artifactsv1alpha1.WithNamespace(overseer.Namespace))
+			Param(osr.Spec.Params).
+			Do(artifactsv1alpha1.WithNamespace(overseer.Namespace),
+				artifactsv1alpha1.WithAttachedGenerateName(osr.Name),
+			)
 
 		if err != nil {
 			return err

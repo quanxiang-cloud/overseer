@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"fmt"
+
 	pipeline1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -25,5 +27,12 @@ type Options func(client.Object)
 func WithNamespace(namespace string) Options {
 	return func(obj client.Object) {
 		obj.SetNamespace(namespace)
+	}
+}
+
+func WithAttachedGenerateName(name string) Options {
+	return func(obj client.Object) {
+		obj.SetGenerateName(fmt.Sprintf("%s-%s-", name, obj.GetName()))
+		obj.SetName("")
 	}
 }

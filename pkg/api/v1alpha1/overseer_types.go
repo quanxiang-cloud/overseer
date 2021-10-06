@@ -41,12 +41,6 @@ type OverseerSpec struct {
 	Steps []StepSpec `json:"steps,omitempty"`
 }
 
-// OverseerStatus defines the observed state of Overseer
-type OverseerStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-}
-
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
@@ -55,8 +49,7 @@ type Overseer struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   OverseerSpec   `json:"spec,omitempty"`
-	Status OverseerStatus `json:"status,omitempty"`
+	Spec OverseerSpec `json:"spec,omitempty"`
 }
 
 //+kubebuilder:object:root=true

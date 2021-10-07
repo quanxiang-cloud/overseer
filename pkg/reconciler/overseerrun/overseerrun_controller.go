@@ -19,6 +19,7 @@ package overseerrun
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -27,13 +28,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/go-logr/logr"
-	osv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
+	v1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
 	artifactsv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/artifacts/v1alpha1"
 	overseerRunV1alpha1 "github.com/quanxiang-cloud/overseer/pkg/listers/v1alpha1"
 	"github.com/quanxiang-cloud/overseer/pkg/materials"
 	materialsv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/materials/v1alpha1"
 	pipeline1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // OverseerRunReconciler reconciles a OverseerRun object
@@ -72,7 +74,7 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	logger := log.FromContext(ctx)
 	logger = logger.WithName("Reconcile")
 
-	var osr osv1alpha1.OverseerRun
+	var osr v1alpha1.OverseerRun
 	err := r.Get(ctx, req.NamespacedName, &osr)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -81,42 +83,41 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	if !osr.Status.Condition.IsNil() {
+	if osr.Status.Condition.IsTrue() || osr.Status.Condition.IsFalse() {
+		return ctrl.Result{}, err
+	}
+
+	if osr.Status.Condition.IsNil() {
+		osr.Status.Condition.Init()
+
+		err = r.reconcile(ctx, &osr)
+		if err != nil {
+			failedWithError(&osr.Status.Status, err)
+		}
+	} else {
 		err = r.updateStatus(ctx, &osr)
 		if err != nil {
-			return ctrl.Result{}, err
+			failedWithError(&osr.Status.Status, err)
 		}
-		return ctrl.Result{}, nil
 	}
-
-	osr.Status.Condition.Init()
-
-	err = r.reconcile(ctx, &osr)
-	if err != nil {
-		osr.Status.Condition.Status = corev1.ConditionFalse
-		if err = r.Status().Update(ctx, &osr); err != nil {
-			logger.V(1).Error(err, "update status")
-			return ctrl.Result{}, err
-		}
-		return ctrl.Result{}, nil
-	}
-
-	logger.Info("Success")
 
 	if err = r.Status().Update(ctx, &osr); err != nil {
 		logger.V(1).Error(err, "update status")
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{}, nil
+	logger.Info("Success")
+	return ctrl.Result{
+		RequeueAfter: time.Second * 10,
+	}, err
 }
 
-func (r *OverseerRunReconciler) updateStatus(ctx context.Context, osr *osv1alpha1.OverseerRun) error {
+func (r *OverseerRunReconciler) updateStatus(ctx context.Context, osr *v1alpha1.OverseerRun) error {
 	log := r.Log.WithName("updateStatus")
 
 	// the overseer run is done.
 	if osr.Status.Condition.Status == corev1.ConditionTrue ||
-		osr.Status.Condition.IsUnFalse() {
+		osr.Status.Condition.IsFalse() {
 		return nil
 	}
 
@@ -125,10 +126,10 @@ func (r *OverseerRunReconciler) updateStatus(ctx context.Context, osr *osv1alpha
 		condition = corev1.ConditionTrue
 	)
 	for name, ref := range osr.Status.Condition.ResourceRef {
-		if ref.State == osv1alpha1.StepConditionSuceess {
+		if ref.State == v1alpha1.StepConditionSuceess {
 			// onle all success,the overseerRun will success.
 			continue
-		} else if ref.State == osv1alpha1.StepConditionFail {
+		} else if ref.State == v1alpha1.StepConditionFail {
 			// one fail all fail.
 			condition = corev1.ConditionFalse
 			continue
@@ -139,7 +140,7 @@ func (r *OverseerRunReconciler) updateStatus(ctx context.Context, osr *osv1alpha
 		if !ok {
 			err := fmt.Errorf("unknown gvk [%s]", ref.GroupVersionKind)
 			log.Error(err, "get object by gvk", "refName", name)
-			ref.State = osv1alpha1.StepConditionFail
+			ref.State = v1alpha1.StepConditionFail
 			return err
 		}
 
@@ -147,7 +148,7 @@ func (r *OverseerRunReconciler) updateStatus(ctx context.Context, osr *osv1alpha
 
 		if err := r.Get(ctx, client.ObjectKey{Namespace: osr.Namespace, Name: name}, obj); err != nil {
 			log.Error(err, "failed to get gbject", "refName", name)
-			ref.State = osv1alpha1.StepConditionFail
+			ref.State = v1alpha1.StepConditionFail
 			return err
 		}
 
@@ -157,31 +158,30 @@ func (r *OverseerRunReconciler) updateStatus(ctx context.Context, osr *osv1alpha
 	if finsh {
 		osr.Status.Condition.Status = condition
 	}
+	osr.Status.Condition.LastTransitionTime = metav1.NewTime(time.Now())
 	return nil
 }
 
-func (r *OverseerRunReconciler) reconcile(ctx context.Context, osr *osv1alpha1.OverseerRun) error {
+func (r *OverseerRunReconciler) reconcile(ctx context.Context, osr *v1alpha1.OverseerRun) error {
 	overseer, err := r.lister.Overseers(osr.Namespace).Get(osr.Spec.OverseerRef.Name)
 	if err != nil {
 		return err
 	}
 
-	err = osv1alpha1.ParamsValidate(osr.Spec.Params, overseer.Spec.Params)
+	err = v1alpha1.ParamsValidate(osr.Spec.Params, overseer.Spec.Params)
 	if err != nil {
-		// TODO params error state
 		return err
 	}
 
 	err = r.reconcileOverseer(ctx, osr, overseer)
 	if err != nil {
-		// TODO  should set status and reason
 		return err
 	}
 
 	return nil
 }
 
-func (r *OverseerRunReconciler) reconcileOverseer(ctx context.Context, osr *osv1alpha1.OverseerRun, overseer *osv1alpha1.Overseer) error {
+func (r *OverseerRunReconciler) reconcileOverseer(ctx context.Context, osr *v1alpha1.OverseerRun, overseer *v1alpha1.Overseer) error {
 	log := r.Log.WithName("reconcileOverseer")
 
 	for _, step := range overseer.Spec.Steps {
@@ -214,9 +214,9 @@ func (r *OverseerRunReconciler) reconcileOverseer(ctx context.Context, osr *osv1
 			return err
 		}
 
-		osr.Status.Condition.ResourceRef[obj.GetName()] = osv1alpha1.StepCondition{
+		osr.Status.Condition.ResourceRef[obj.GetName()] = v1alpha1.StepCondition{
 			GroupVersionKind: m.GetGroupVersionKind().String(),
-			State:            osv1alpha1.StepConditionUnknown,
+			State:            v1alpha1.StepConditionUnknown,
 		}
 	}
 
@@ -226,6 +226,6 @@ func (r *OverseerRunReconciler) reconcileOverseer(ctx context.Context, osr *osv1
 // SetupWithManager sets up the controller with the Manager.
 func (r *OverseerRunReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&osv1alpha1.OverseerRun{}).
+		For(&v1alpha1.OverseerRun{}).
 		Complete(r)
 }

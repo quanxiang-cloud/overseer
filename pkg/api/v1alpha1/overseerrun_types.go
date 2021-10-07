@@ -46,7 +46,7 @@ type OverseerRunStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.condition.status`
-//+kubebuilder:printcolumn:name="Messge",type=string,JSONPath=`.status.condition.message`
+//+kubebuilder:printcolumn:name="Reason",type=string,JSONPath=`.status.condition.reason`
 //+kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // OverseerRun is the Schema for the overseerruns API

@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Condition defines a readiness condition
@@ -10,12 +11,20 @@ type Condition struct {
 	// +required
 	Status corev1.ConditionStatus `json:"status"`
 
+	// The reason for the condition's last transition.
+	// +optional
+	Reason string `json:"reason,omitempty"`
+
 	// A human readable message indicating details about the transition.
 	// +optional
 	Message string `json:"message,omitempty"`
 
 	// +required
 	ResourceRef map[string]StepCondition `json:"resourceRef,omitempty"`
+
+	// LastTransitionTime is the last time the condition transitioned from one status to another.
+	// +optional
+	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
 }
 
 func (c *Condition) IsNil() bool {
@@ -35,7 +44,7 @@ func (c *Condition) IsTrue() bool {
 	return c.Status == corev1.ConditionTrue
 }
 
-func (c *Condition) IsUnFalse() bool {
+func (c *Condition) IsFalse() bool {
 	return c.Status == corev1.ConditionFalse
 }
 

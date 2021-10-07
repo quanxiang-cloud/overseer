@@ -18,6 +18,7 @@ package overseerrun
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -27,6 +28,7 @@ import (
 
 	"github.com/go-logr/logr"
 	osv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
+	artifactsv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/artifacts/v1alpha1"
 	overseerRunV1alpha1 "github.com/quanxiang-cloud/overseer/pkg/listers/v1alpha1"
 	"github.com/quanxiang-cloud/overseer/pkg/materials"
 	materialsv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/materials/v1alpha1"
@@ -69,7 +71,6 @@ func NewOverseerRunReconciler(client client.Client, scheme *runtime.Scheme, logg
 func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.WithName("Reconcile")
-	logger.Info("BEGIN============")
 
 	var osr osv1alpha1.OverseerRun
 	err := r.Get(ctx, req.NamespacedName, &osr)
@@ -92,10 +93,15 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	err = r.reconcile(ctx, &osr)
 	if err != nil {
+		osr.Status.Condition.Status = corev1.ConditionFalse
+		if err = r.Status().Update(ctx, &osr); err != nil {
+			logger.V(1).Error(err, "update status")
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{}, nil
 	}
 
-	logger.Info("Success********************")
+	logger.Info("Success")
 
 	if err = r.Status().Update(ctx, &osr); err != nil {
 		logger.V(1).Error(err, "update status")
@@ -106,6 +112,8 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 }
 
 func (r *OverseerRunReconciler) updateStatus(ctx context.Context, osr *osv1alpha1.OverseerRun) error {
+	log := r.Log.WithName("updateStatus")
+
 	// the overseer run is done.
 	if osr.Status.Condition.Status == corev1.ConditionTrue ||
 		osr.Status.Condition.IsUnFalse() {
@@ -127,9 +135,23 @@ func (r *OverseerRunReconciler) updateStatus(ctx context.Context, osr *osv1alpha
 		}
 		finsh = false
 
-		// update state
-		_ = name
-		_ = ref
+		getter, ok := artifactsv1alpha1.GetGetter(ref.GroupVersionKind)
+		if !ok {
+			err := fmt.Errorf("unknown gvk [%s]", ref.GroupVersionKind)
+			log.Error(err, "get object by gvk", "refName", name)
+			ref.State = osv1alpha1.StepConditionFail
+			return err
+		}
+
+		obj := getter.New()
+
+		if err := r.Get(ctx, client.ObjectKey{Namespace: osr.Namespace, Name: name}, obj); err != nil {
+			log.Error(err, "failed to get gbject", "refName", name)
+			ref.State = osv1alpha1.StepConditionFail
+			return err
+		}
+
+		osr.Status.Condition.ResourceRef[name] = getter.GetState(obj)
 	}
 
 	if finsh {

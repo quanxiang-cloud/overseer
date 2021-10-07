@@ -50,6 +50,15 @@ const (
 )
 
 type StepCondition struct {
-	GroupVersionKind string            `json:"groupVersionKind,omitempty"`
-	State            StepConditionType `json:"state,omitempty"`
+	GroupVersionKind string `json:"groupVersionKind,omitempty"`
+
+	State StepConditionType `json:"state,omitempty"`
+
+	// A human-readable message indicating details about why the volume is in this state.
+	// +optional
+	Message string `json:"message,omitempty" protobuf:"bytes,2,opt,name=message"`
+	// Reason is a brief string that describes any failure and is meant
+	// for machine parsing and tidy display in the CLI.
+	// +optional
+	Reason string `json:"reason,omitempty" protobuf:"bytes,3,opt,name=reason"`
 }

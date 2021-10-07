@@ -13,10 +13,10 @@ import (
 )
 
 type materialsv1alpha1 struct {
-	body      []byte
-	namespace string
+	body []byte
 
 	params []apiv1alpha1.Param
+	gvk    schema.GroupVersionKind
 }
 
 func New() *materialsv1alpha1 {
@@ -28,7 +28,7 @@ func (m *materialsv1alpha1) Body(body []byte) Interface {
 	return m
 }
 
-func (m *materialsv1alpha1) Do(opts ...artifactsv1alpha1.Options) (client.Object, error) {
+func (m *materialsv1alpha1) Do(opts ...Options) (client.Object, error) {
 	if m.body == nil {
 		return nil, nil
 	}
@@ -48,9 +48,9 @@ func (m *materialsv1alpha1) Do(opts ...artifactsv1alpha1.Options) (client.Object
 		return nil, err
 	}
 
-	gvk := schema.FromAPIVersionAndKind(typeMeta.APIVersion, typeMeta.Kind)
+	m.gvk = schema.FromAPIVersionAndKind(typeMeta.APIVersion, typeMeta.Kind)
 
-	obj, ok := artifactsv1alpha1.GetObj(gvk)
+	obj, ok := artifactsv1alpha1.GetObj(m.gvk)
 	if !ok {
 		return nil, fmt.Errorf("unrecognizable gkv [%v]", obj)
 	}
@@ -108,4 +108,8 @@ func templateExecute(values interface{}, tmpl string) (string, error) {
 
 func (m *materialsv1alpha1) unmarshal(ptr interface{}) error {
 	return yaml.Unmarshal(m.body, ptr)
+}
+
+func (m *materialsv1alpha1) GetGroupVersionKind() schema.GroupVersionKind {
+	return m.gvk
 }

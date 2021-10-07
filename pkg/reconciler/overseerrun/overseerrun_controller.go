@@ -26,10 +26,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/go-logr/logr"
+	"github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
 	osv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
 	artifactsv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/artifacts/v1alpha1"
 	overseerRunV1alpha1 "github.com/quanxiang-cloud/overseer/pkg/listers/v1alpha1"
 	"github.com/quanxiang-cloud/overseer/pkg/materials"
+	pipeline1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // OverseerRunReconciler reconciles a OverseerRun object
@@ -67,6 +70,7 @@ func NewOverseerRunReconciler(client client.Client, scheme *runtime.Scheme, logg
 func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.WithName("Reconcile")
+	logger.Info("BEGIN============")
 
 	var osr osv1alpha1.OverseerRun
 	err := r.Get(ctx, req.NamespacedName, &osr)
@@ -77,16 +81,65 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	err = r.reconcile(ctx, osr)
+	if !osr.Status.Condition.IsNil() {
+		err = r.updateStatus(ctx, &osr)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	osr.Status.Condition.Init()
+
+	err = r.reconcile(ctx, &osr)
 	if err != nil {
 		return ctrl.Result{}, nil
 	}
 
-	// TODO osr	status
+	logger.Info("Success********************")
+
+	if err = r.Status().Update(ctx, &osr); err != nil {
+		logger.V(1).Error(err, "update status")
+		return ctrl.Result{}, err
+	}
+
 	return ctrl.Result{}, nil
 }
 
-func (r *OverseerRunReconciler) reconcile(ctx context.Context, osr osv1alpha1.OverseerRun) error {
+func (r *OverseerRunReconciler) updateStatus(ctx context.Context, osr *osv1alpha1.OverseerRun) error {
+	// the overseer run is done.
+	if osr.Status.Condition.Status == corev1.ConditionTrue ||
+		osr.Status.Condition.IsUnFalse() {
+		return nil
+	}
+
+	var (
+		finsh     = true
+		condition = corev1.ConditionTrue
+	)
+	for name, ref := range osr.Status.Condition.ResourceRef {
+		if ref.State == v1alpha1.StepConditionSuceess {
+			// onle all success,the overseerRun will success.
+			continue
+		} else if ref.State == v1alpha1.StepConditionFail {
+			// one fail all fail.
+			condition = corev1.ConditionFalse
+			continue
+		}
+		finsh = false
+
+		// update state
+		_ = name
+		_ = ref
+	}
+
+	if finsh {
+		osr.Status.Condition.Status = condition
+	}
+	return nil
+}
+
+func (r *OverseerRunReconciler) reconcile(ctx context.Context, osr *osv1alpha1.OverseerRun) error {
 	overseer, err := r.lister.Overseers(osr.Namespace).Get(osr.Spec.OverseerRef.Name)
 	if err != nil {
 		return err
@@ -107,11 +160,12 @@ func (r *OverseerRunReconciler) reconcile(ctx context.Context, osr osv1alpha1.Ov
 	return nil
 }
 
-func (r *OverseerRunReconciler) reconcileOverseer(ctx context.Context, osr osv1alpha1.OverseerRun, overseer *osv1alpha1.Overseer) error {
+func (r *OverseerRunReconciler) reconcileOverseer(ctx context.Context, osr *osv1alpha1.OverseerRun, overseer *osv1alpha1.Overseer) error {
 	log := r.Log.WithName("reconcileOverseer")
 
 	for _, step := range overseer.Spec.Steps {
-		obj, err := r.materials.V1alpha1().
+		m := r.materials.V1alpha1()
+		obj, err := m.
 			Body([]byte(step.Template)).
 			Param(osr.Spec.Params).
 			Do(artifactsv1alpha1.WithNamespace(overseer.Namespace),
@@ -122,9 +176,26 @@ func (r *OverseerRunReconciler) reconcileOverseer(ctx context.Context, osr osv1a
 			return err
 		}
 
+		obj.SetOwnerReferences(nil)
+		if err := ctrl.SetControllerReference(osr, obj, r.Scheme); err != nil {
+			log.Error(err, "Failed to SetControllerReference", "step", step.Name)
+			return err
+		}
+
 		if err = r.Create(ctx, obj); err != nil {
 			log.Error(err, "Failed to create obj")
 			return err
+		}
+
+		taskRun := &pipeline1beta1.TaskRun{}
+
+		if err := r.Get(ctx, client.ObjectKey{Namespace: obj.GetNamespace(), Name: obj.GetName()}, taskRun); err != nil {
+			return err
+		}
+
+		osr.Status.Condition.ResourceRef[obj.GetName()] = v1alpha1.StepCondition{
+			GroupVersionKind: m.GetGroupVersionKind().String(),
+			State:            v1alpha1.StepConditionUnknown,
 		}
 	}
 

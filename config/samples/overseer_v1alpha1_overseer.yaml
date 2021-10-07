@@ -8,11 +8,10 @@ spec:
       default: ""
   steps:
     - name: echo
-      image: ubuntu
-      command:
-        - echo
-      args:
-        - "$(params.foo)"
+      image: ubuntue
+      script: |
+        sleep 60
+        echo "xxx"
 ---
 apiVersion: quanxiang.cloud.io/v1alpha1
 kind: Overseer

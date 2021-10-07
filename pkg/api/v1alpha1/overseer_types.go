@@ -42,7 +42,6 @@ type OverseerSpec struct {
 }
 
 //+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
 
 // Overseer is the Schema for the overseers API
 type Overseer struct {

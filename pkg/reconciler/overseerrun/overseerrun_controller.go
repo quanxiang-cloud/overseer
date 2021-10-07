@@ -26,7 +26,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/go-logr/logr"
-	"github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
 	osv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
 	overseerRunV1alpha1 "github.com/quanxiang-cloud/overseer/pkg/listers/v1alpha1"
 	"github.com/quanxiang-cloud/overseer/pkg/materials"
@@ -118,10 +117,10 @@ func (r *OverseerRunReconciler) updateStatus(ctx context.Context, osr *osv1alpha
 		condition = corev1.ConditionTrue
 	)
 	for name, ref := range osr.Status.Condition.ResourceRef {
-		if ref.State == v1alpha1.StepConditionSuceess {
+		if ref.State == osv1alpha1.StepConditionSuceess {
 			// onle all success,the overseerRun will success.
 			continue
-		} else if ref.State == v1alpha1.StepConditionFail {
+		} else if ref.State == osv1alpha1.StepConditionFail {
 			// one fail all fail.
 			condition = corev1.ConditionFalse
 			continue
@@ -193,9 +192,9 @@ func (r *OverseerRunReconciler) reconcileOverseer(ctx context.Context, osr *osv1
 			return err
 		}
 
-		osr.Status.Condition.ResourceRef[obj.GetName()] = v1alpha1.StepCondition{
+		osr.Status.Condition.ResourceRef[obj.GetName()] = osv1alpha1.StepCondition{
 			GroupVersionKind: m.GetGroupVersionKind().String(),
-			State:            v1alpha1.StepConditionUnknown,
+			State:            osv1alpha1.StepConditionUnknown,
 		}
 	}
 

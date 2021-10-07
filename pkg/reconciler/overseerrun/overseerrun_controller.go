@@ -28,9 +28,9 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
 	osv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
-	artifactsv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/artifacts/v1alpha1"
 	overseerRunV1alpha1 "github.com/quanxiang-cloud/overseer/pkg/listers/v1alpha1"
 	"github.com/quanxiang-cloud/overseer/pkg/materials"
+	materialsv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/materials/v1alpha1"
 	pipeline1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -168,8 +168,8 @@ func (r *OverseerRunReconciler) reconcileOverseer(ctx context.Context, osr *osv1
 		obj, err := m.
 			Body([]byte(step.Template)).
 			Param(osr.Spec.Params).
-			Do(artifactsv1alpha1.WithNamespace(overseer.Namespace),
-				artifactsv1alpha1.WithAttachedGenerateName(osr.Name),
+			Do(materialsv1alpha1.WithNamespace(overseer.Namespace),
+				materialsv1alpha1.WithAttachedGenerateName(osr.Name),
 			)
 
 		if err != nil {

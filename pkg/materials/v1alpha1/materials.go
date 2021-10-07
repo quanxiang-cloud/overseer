@@ -28,7 +28,7 @@ func (m *materialsv1alpha1) Body(body []byte) Interface {
 	return m
 }
 
-func (m *materialsv1alpha1) Do(opts ...artifactsv1alpha1.Options) (client.Object, error) {
+func (m *materialsv1alpha1) Do(opts ...Options) (client.Object, error) {
 	if m.body == nil {
 		return nil, nil
 	}

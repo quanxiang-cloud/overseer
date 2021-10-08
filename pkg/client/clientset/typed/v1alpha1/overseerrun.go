@@ -43,7 +43,7 @@ func (o *overseerRun) Get(ctx context.Context, name string, options v1.GetOption
 	result = &v1alpha1.OverseerRun{}
 	err = o.client.Get().
 		Namespace(o.ns).
-		Resource("Overseerruns").
+		Resource("overseerruns").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
 		Do(ctx).
@@ -59,7 +59,7 @@ func (o *overseerRun) List(ctx context.Context, opts v1.ListOptions) (result *v1
 	result = &v1alpha1.OverseerRunList{}
 	err = o.client.Get().
 		Namespace(o.ns).
-		Resource("Overseerruns").
+		Resource("overseerruns").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Do(ctx).
@@ -75,7 +75,7 @@ func (o *overseerRun) Watch(ctx context.Context, opts v1.ListOptions) (watch.Int
 	opts.Watch = true
 	return o.client.Get().
 		Namespace(o.ns).
-		Resource("Overseerruns").
+		Resource("overseerruns").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Watch(ctx)
@@ -85,7 +85,7 @@ func (o *overseerRun) Create(ctx context.Context, pipeline *v1alpha1.OverseerRun
 	result = &v1alpha1.OverseerRun{}
 	err = o.client.Post().
 		Namespace(o.ns).
-		Resource("Overseerruns").
+		Resource("overseerruns").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(pipeline).
 		Do(ctx).
@@ -97,7 +97,7 @@ func (o *overseerRun) Update(ctx context.Context, pipeline *v1alpha1.OverseerRun
 	result = &v1alpha1.OverseerRun{}
 	err = o.client.Put().
 		Namespace(o.ns).
-		Resource("Overseerruns").
+		Resource("overseerruns").
 		Name(pipeline.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(pipeline).
@@ -109,7 +109,7 @@ func (o *overseerRun) Update(ctx context.Context, pipeline *v1alpha1.OverseerRun
 func (o *overseerRun) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	return o.client.Delete().
 		Namespace(o.ns).
-		Resource("Overseerruns").
+		Resource("overseerruns").
 		Name(name).
 		Body(&opts).
 		Do(ctx).
@@ -123,7 +123,7 @@ func (o *overseerRun) DeleteCollection(ctx context.Context, opts v1.DeleteOption
 	}
 	return o.client.Delete().
 		Namespace(o.ns).
-		Resource("Overseerruns").
+		Resource("overseerruns").
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(&opts).
@@ -135,7 +135,7 @@ func (o *overseerRun) Patch(ctx context.Context, name string, pt types.PatchType
 	result = &v1alpha1.OverseerRun{}
 	err = o.client.Patch(pt).
 		Namespace(o.ns).
-		Resource("Overseerruns").
+		Resource("overseerruns").
 		Name(name).
 		SubResource(subresources...).
 		VersionedParams(&opts, scheme.ParameterCodec).

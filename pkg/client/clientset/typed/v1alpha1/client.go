@@ -9,6 +9,7 @@ import (
 type Interface interface {
 	RESTClient() rest.Interface
 	OverseerGetter
+	OverseerRunGetter
 }
 
 type OverseerV1alpha1Client struct {
@@ -17,6 +18,10 @@ type OverseerV1alpha1Client struct {
 
 func (o *OverseerV1alpha1Client) Overseers(namespace string) OverseerInterface {
 	return newOverseers(o, namespace)
+}
+
+func (o *OverseerV1alpha1Client) OverseerRuns(namespace string) OverseerRunsInterface {
+	return newOverseerRuns(o, namespace)
 }
 
 func (o *OverseerV1alpha1Client) RESTClient() rest.Interface {

@@ -14,8 +14,11 @@ var depot map[schema.GroupVersionKind]Getter
 
 func init() {
 	depot = make(map[schema.GroupVersionKind]Getter)
+	depot[corev1.SchemeGroupVersion.WithKind("ConfigMap")] = &ConfigMap{}
+	depot[corev1.SchemeGroupVersion.WithKind("PersistentVolumeClaim")] = &PersistentVolumeClaim{}
 	depot[corev1.SchemeGroupVersion.WithKind("PersistentVolume")] = &PersistentVolume{}
 	depot[pipeline1beta1.SchemeGroupVersion.WithKind("TaskRun")] = &TaskRun{}
+	depot[pipeline1beta1.SchemeGroupVersion.WithKind("PipelineRun")] = &PipelineRun{}
 }
 
 func GetObj(gkv schema.GroupVersionKind) (client.Object, bool) {
@@ -55,6 +58,23 @@ type Getter interface {
 	New() client.Object
 }
 
+type ConfigMap struct {
+}
+
+func (c *ConfigMap) New() client.Object {
+	return &corev1.ConfigMap{}
+}
+
+func (c *ConfigMap) GetState(obj client.Object) osv1alpha1.StepCondition {
+	o := obj.(*corev1.ConfigMap)
+	sc := osv1alpha1.StepCondition{
+		GroupVersionKind: o.GroupVersionKind().String(),
+	}
+
+	sc.State = osv1alpha1.StepConditionSuceess
+	return sc
+}
+
 type PersistentVolume struct {
 }
 
@@ -83,6 +103,50 @@ func (p *PersistentVolume) GetState(obj client.Object) osv1alpha1.StepCondition 
 	return sc
 }
 
+type PersistentVolumeClaim struct {
+}
+
+func (p *PersistentVolumeClaim) New() client.Object {
+	return &corev1.PersistentVolumeClaim{}
+}
+
+func (p *PersistentVolumeClaim) GetState(obj client.Object) osv1alpha1.StepCondition {
+	o := obj.(*corev1.PersistentVolumeClaim)
+
+	sc := osv1alpha1.StepCondition{
+		GroupVersionKind: o.GroupVersionKind().String(),
+	}
+
+	switch o.Status.Phase {
+	case corev1.ClaimPending:
+		sc.State = osv1alpha1.StepConditionPending
+	case corev1.ClaimBound:
+		sc.State = osv1alpha1.StepConditionSuceess
+	default:
+		sc.State = osv1alpha1.StepConditionFail
+	}
+
+	size := len(o.Status.Conditions)
+	if size == 0 {
+		return sc
+	}
+
+	condition := o.Status.Conditions[size-1]
+	switch condition.Status {
+	case corev1.ConditionFalse:
+		sc.State = osv1alpha1.StepConditionFail
+	case corev1.ConditionTrue:
+		sc.State = osv1alpha1.StepConditionSuceess
+	default:
+		sc.State = osv1alpha1.StepConditionUnknown
+	}
+
+	sc.Message = condition.Message
+	sc.Reason = condition.Reason
+
+	return sc
+}
+
 type TaskRun struct {
 }
 
@@ -97,10 +161,12 @@ func (t *TaskRun) GetState(obj client.Object) osv1alpha1.StepCondition {
 		GroupVersionKind: o.GroupVersionKind().String(),
 	}
 
-	if len(o.Status.Conditions) == 0 {
+	size := len(o.Status.Conditions)
+	if size == 0 {
 		return sc
 	}
-	condition := o.Status.Conditions[0]
+
+	condition := o.Status.Conditions[size-1]
 
 	switch condition.Status {
 	case corev1.ConditionFalse:
@@ -113,5 +179,40 @@ func (t *TaskRun) GetState(obj client.Object) osv1alpha1.StepCondition {
 
 	sc.Message = condition.Message
 	sc.Reason = condition.Reason
+	return sc
+}
+
+type PipelineRun struct{}
+
+func (p *PipelineRun) New() client.Object {
+	return &pipeline1beta1.PipelineRun{}
+}
+
+func (p *PipelineRun) GetState(obj client.Object) osv1alpha1.StepCondition {
+	o := obj.(*pipeline1beta1.PipelineRun)
+
+	sc := osv1alpha1.StepCondition{
+		GroupVersionKind: o.GroupVersionKind().String(),
+	}
+
+	size := len(o.Status.Conditions)
+	if size == 0 {
+		return sc
+	}
+
+	condition := o.Status.Conditions[size-1]
+
+	switch condition.Status {
+	case corev1.ConditionFalse:
+		sc.State = osv1alpha1.StepConditionFail
+	case corev1.ConditionTrue:
+		sc.State = osv1alpha1.StepConditionSuceess
+	default:
+		sc.State = osv1alpha1.StepConditionUnknown
+	}
+
+	sc.Message = condition.Message
+	sc.Reason = condition.Reason
+
 	return sc
 }

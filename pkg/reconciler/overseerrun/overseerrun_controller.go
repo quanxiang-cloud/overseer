@@ -207,10 +207,6 @@ func (r *OverseerRunReconciler) reconcileOverseer(ctx context.Context, osr *v1al
 			return err
 		}
 
-		if err := r.Get(ctx, client.ObjectKey{Namespace: obj.GetNamespace(), Name: obj.GetName()}, obj); err != nil {
-			return err
-		}
-
 		osr.Status.Condition.ResourceRef[obj.GetName()] = v1alpha1.StepCondition{
 			GroupVersionKind: m.GetGroupVersionKind().String(),
 			State:            v1alpha1.StepConditionUnknown,

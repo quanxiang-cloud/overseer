@@ -32,3 +32,42 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - quanxiang.cloud.io
+  resources:
+  - overseers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - quanxiang.cloud.io
+  resources:
+  - overseers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - quanxiang.cloud.io
+  resources:
+  - overseers/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - tekton.dev
+  resources:
+  - pipelineruns
+  - taskruns
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

@@ -34,7 +34,7 @@ spec:
              name: task-sample
           spec:
             taskRef:
-              name: overseer-sample
+              name: task-sample
             params:
               - name: foo
                 value: $(params.FOO)

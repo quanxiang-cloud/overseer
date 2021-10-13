@@ -107,7 +107,7 @@ func main() {
 		mgr.GetClient(),
 		mgr.GetScheme(),
 		ctrl.Log.WithName("OverseerRun"),
-		listersv1alpha1.NewPipelineLister(indexer),
+		listersv1alpha1.NewOverseerLister(indexer),
 	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Overseer")
 		os.Exit(1)

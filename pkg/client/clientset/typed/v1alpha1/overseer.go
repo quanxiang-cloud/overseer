@@ -81,7 +81,7 @@ func (o *overseer) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interf
 		Watch(ctx)
 }
 
-func (o *overseer) Create(ctx context.Context, pipeline *v1alpha1.Overseer, opts v1.CreateOptions) (result *v1alpha1.Overseer, err error) {
+func (o *overseer) Create(ctx context.Context, overseer *v1alpha1.Overseer, opts v1.CreateOptions) (result *v1alpha1.Overseer, err error) {
 	result = &v1alpha1.Overseer{}
 	err = o.client.Post().
 		Namespace(o.ns).

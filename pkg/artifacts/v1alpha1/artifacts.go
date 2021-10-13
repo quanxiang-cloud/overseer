@@ -5,7 +5,9 @@ import (
 
 	osv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
 	pipeline1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -14,11 +16,13 @@ var depot map[schema.GroupVersionKind]Getter
 
 func init() {
 	depot = make(map[schema.GroupVersionKind]Getter)
+	depot[corev1.SchemeGroupVersion.WithKind("Service")] = &Service{}
 	depot[corev1.SchemeGroupVersion.WithKind("ConfigMap")] = &ConfigMap{}
 	depot[corev1.SchemeGroupVersion.WithKind("PersistentVolumeClaim")] = &PersistentVolumeClaim{}
 	depot[corev1.SchemeGroupVersion.WithKind("PersistentVolume")] = &PersistentVolume{}
 	depot[pipeline1beta1.SchemeGroupVersion.WithKind("TaskRun")] = &TaskRun{}
 	depot[pipeline1beta1.SchemeGroupVersion.WithKind("PipelineRun")] = &PipelineRun{}
+	depot[appsv1.SchemeGroupVersion.WithKind("Deployment")] = &Deployment{}
 }
 
 func GetObj(gkv schema.GroupVersionKind) (client.Object, bool) {
@@ -71,7 +75,7 @@ func (c *ConfigMap) GetState(obj client.Object) osv1alpha1.StepCondition {
 		GroupVersionKind: o.GroupVersionKind().String(),
 	}
 
-	sc.State = osv1alpha1.StepConditionSuceess
+	sc.State = osv1alpha1.StepConditionSuccess
 	return sc
 }
 
@@ -95,7 +99,7 @@ func (p *PersistentVolume) GetState(obj client.Object) osv1alpha1.StepCondition 
 	case corev1.VolumePending:
 		sc.State = osv1alpha1.StepConditionPending
 	default:
-		sc.State = osv1alpha1.StepConditionSuceess
+		sc.State = osv1alpha1.StepConditionSuccess
 	}
 
 	sc.Message = o.Status.Message
@@ -121,7 +125,7 @@ func (p *PersistentVolumeClaim) GetState(obj client.Object) osv1alpha1.StepCondi
 	case corev1.ClaimPending:
 		sc.State = osv1alpha1.StepConditionPending
 	case corev1.ClaimBound:
-		sc.State = osv1alpha1.StepConditionSuceess
+		sc.State = osv1alpha1.StepConditionSuccess
 	default:
 		sc.State = osv1alpha1.StepConditionFail
 	}
@@ -136,7 +140,7 @@ func (p *PersistentVolumeClaim) GetState(obj client.Object) osv1alpha1.StepCondi
 	case corev1.ConditionFalse:
 		sc.State = osv1alpha1.StepConditionFail
 	case corev1.ConditionTrue:
-		sc.State = osv1alpha1.StepConditionSuceess
+		sc.State = osv1alpha1.StepConditionSuccess
 	default:
 		sc.State = osv1alpha1.StepConditionUnknown
 	}
@@ -172,7 +176,7 @@ func (t *TaskRun) GetState(obj client.Object) osv1alpha1.StepCondition {
 	case corev1.ConditionFalse:
 		sc.State = osv1alpha1.StepConditionFail
 	case corev1.ConditionTrue:
-		sc.State = osv1alpha1.StepConditionSuceess
+		sc.State = osv1alpha1.StepConditionSuccess
 	default:
 		sc.State = osv1alpha1.StepConditionUnknown
 	}
@@ -206,7 +210,78 @@ func (p *PipelineRun) GetState(obj client.Object) osv1alpha1.StepCondition {
 	case corev1.ConditionFalse:
 		sc.State = osv1alpha1.StepConditionFail
 	case corev1.ConditionTrue:
-		sc.State = osv1alpha1.StepConditionSuceess
+		sc.State = osv1alpha1.StepConditionSuccess
+	default:
+		sc.State = osv1alpha1.StepConditionUnknown
+	}
+
+	sc.Message = condition.Message
+	sc.Reason = condition.Reason
+
+	return sc
+}
+
+type Deployment struct{}
+
+func (d *Deployment) New() client.Object {
+	return &appsv1.Deployment{}
+}
+
+func (d *Deployment) GetState(obj client.Object) osv1alpha1.StepCondition {
+
+	o := obj.(*appsv1.Deployment)
+
+	sc := osv1alpha1.StepCondition{
+		GroupVersionKind: o.GroupVersionKind().String(),
+	}
+
+	size := len(o.Status.Conditions)
+	if size == 0 {
+		return sc
+	}
+
+	condition := o.Status.Conditions[size-1]
+
+	switch condition.Status {
+	case corev1.ConditionFalse:
+		sc.State = osv1alpha1.StepConditionFail
+	case corev1.ConditionTrue:
+		sc.State = osv1alpha1.StepConditionSuccess
+	default:
+		sc.State = osv1alpha1.StepConditionUnknown
+	}
+
+	sc.Message = condition.Message
+	sc.Reason = condition.Reason
+
+	return sc
+}
+
+type Service struct{}
+
+func (s *Service) New() client.Object {
+	return &corev1.Service{}
+}
+
+func (s *Service) GetState(obj client.Object) osv1alpha1.StepCondition {
+	o := obj.(*corev1.Service)
+
+	sc := osv1alpha1.StepCondition{
+		GroupVersionKind: o.GroupVersionKind().String(),
+	}
+
+	size := len(o.Status.Conditions)
+	if size == 0 {
+		return sc
+	}
+
+	condition := o.Status.Conditions[size-1]
+
+	switch condition.Status {
+	case metav1.ConditionFalse:
+		sc.State = osv1alpha1.StepConditionFail
+	case metav1.ConditionTrue:
+		sc.State = osv1alpha1.StepConditionSuccess
 	default:
 		sc.State = osv1alpha1.StepConditionUnknown
 	}

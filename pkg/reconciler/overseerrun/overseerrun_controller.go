@@ -125,7 +125,7 @@ func (r *OverseerRunReconciler) updateStatus(ctx context.Context, osr *v1alpha1.
 		condition = corev1.ConditionTrue
 	)
 	for name, ref := range osr.Status.Condition.ResourceRef {
-		if ref.State == v1alpha1.StepConditionSuceess {
+		if ref.State == v1alpha1.StepConditionSuccess {
 			// onle all success,the overseerRun will success.
 			continue
 		} else if ref.State == v1alpha1.StepConditionFail {

@@ -54,7 +54,7 @@ const (
 	StepConditionUnknown = "Unknown"
 	StepConditionPending = "Pending"
 	StepConditionRunning = "Running"
-	StepConditionSuceess = "Success"
+	StepConditionSuccess = "Success"
 	StepConditionFail    = "Fail"
 )
 

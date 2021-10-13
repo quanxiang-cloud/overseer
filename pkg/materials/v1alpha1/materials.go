@@ -52,7 +52,7 @@ func (m *materialsv1alpha1) Do(opts ...Options) (client.Object, error) {
 
 	obj, ok := artifactsv1alpha1.GetObj(m.gvk)
 	if !ok {
-		return nil, fmt.Errorf("unrecognizable gkv [%v]", obj)
+		return nil, fmt.Errorf("unrecognizable gkv [%s/%s]", typeMeta.APIVersion, typeMeta.Kind)
 	}
 
 	err = m.unmarshal(obj)

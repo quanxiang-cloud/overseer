@@ -14,43 +14,43 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// OverseerInformer provides access to a shared informer and lister
-type OverseerInformer interface {
+// OverseerRunInformer provides access to a shared informer and lister
+type OverseerRunInformer interface {
 	Informer() cache.SharedIndexInformer
 }
 
-func NewOverseerInformer(client clientv1alpha1.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewOverseerRunInformer(client clientv1alpha1.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.V1alpha1().Overseers(namespace).List(context.TODO(), options)
+				return client.V1alpha1().OverseerRuns(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.V1alpha1().Overseers(namespace).Watch(context.TODO(), options)
+				return client.V1alpha1().OverseerRuns(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&overseerv1alpha1.Overseer{},
+		&overseerv1alpha1.OverseerRun{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-type overseerInformer struct {
+type overseerRunInformer struct {
 	factory          informers.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-func (o *overseerInformer) defaultInformer(client clientv1alpha1.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewOverseerInformer(client, o.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, o.tweakListOptions)
+func (o *overseerRunInformer) defaultInformer(client clientv1alpha1.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewOverseerRunInformer(client, o.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, o.tweakListOptions)
 }
 
-func (o *overseerInformer) Informer() cache.SharedIndexInformer {
-	return o.factory.InformerFor(&overseerv1alpha1.Overseer{}, o.defaultInformer)
+func (o *overseerRunInformer) Informer() cache.SharedIndexInformer {
+	return o.factory.InformerFor(&overseerv1alpha1.OverseerRun{}, o.defaultInformer)
 }

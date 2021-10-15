@@ -12,32 +12,28 @@ type OverseerLister interface {
 	Overseers(namespace string) OverseerNamespaceLister
 }
 
-type pipelineLister struct {
+type overseeLister struct {
 	indexer cache.Indexer
 }
 
-func NewPipelineLister(indexer cache.Indexer) OverseerLister {
-	return &pipelineLister{indexer: indexer}
+func NewOverseerLister(indexer cache.Indexer) OverseerLister {
+	return &overseeLister{indexer: indexer}
 }
 
-// List lists all Pipelines in the indexer.
-func (s *pipelineLister) List(selector labels.Selector) (ret []*v1alpha1.Overseer, err error) {
+func (s *overseeLister) List(selector labels.Selector) (ret []*v1alpha1.Overseer, err error) {
 	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
 		ret = append(ret, m.(*v1alpha1.Overseer))
 	})
 	return ret, err
 }
 
-// Pipelines returns an object that can list and get Pipelines.
-func (s *pipelineLister) Overseers(namespace string) OverseerNamespaceLister {
+func (s *overseeLister) Overseers(namespace string) OverseerNamespaceLister {
 	return overseerNamespaceLister{indexer: s.indexer, namespace: namespace}
 }
 
 // OverseerNamespaceLister helps list Overseers.
 type OverseerNamespaceLister interface {
-	// List lists all Pipelines in the indexer.
 	List(selector labels.Selector) (ret []*v1alpha1.Overseer, err error)
-	// Get retrieves the Overseer in the indexer.
 	Get(name string) (*v1alpha1.Overseer, error)
 }
 

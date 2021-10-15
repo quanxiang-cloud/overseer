@@ -81,26 +81,26 @@ func (o *overseerRun) Watch(ctx context.Context, opts v1.ListOptions) (watch.Int
 		Watch(ctx)
 }
 
-func (o *overseerRun) Create(ctx context.Context, pipeline *v1alpha1.OverseerRun, opts v1.CreateOptions) (result *v1alpha1.OverseerRun, err error) {
+func (o *overseerRun) Create(ctx context.Context, overseerrun *v1alpha1.OverseerRun, opts v1.CreateOptions) (result *v1alpha1.OverseerRun, err error) {
 	result = &v1alpha1.OverseerRun{}
 	err = o.client.Post().
 		Namespace(o.ns).
 		Resource("overseerruns").
 		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(pipeline).
+		Body(overseerrun).
 		Do(ctx).
 		Into(result)
 	return
 }
 
-func (o *overseerRun) Update(ctx context.Context, pipeline *v1alpha1.OverseerRun, opts v1.UpdateOptions) (result *v1alpha1.OverseerRun, err error) {
+func (o *overseerRun) Update(ctx context.Context, overseerrun *v1alpha1.OverseerRun, opts v1.UpdateOptions) (result *v1alpha1.OverseerRun, err error) {
 	result = &v1alpha1.OverseerRun{}
 	err = o.client.Put().
 		Namespace(o.ns).
 		Resource("overseerruns").
-		Name(pipeline.Name).
+		Name(overseerrun.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(pipeline).
+		Body(overseerrun).
 		Do(ctx).
 		Into(result)
 	return

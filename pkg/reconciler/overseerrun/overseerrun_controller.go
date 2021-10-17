@@ -93,11 +93,12 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		if err != nil {
 			failedWithError(&osr.Status.Status, err)
 		}
-	}
+	} else {
+		err = r.updateStatus(ctx, &osr)
+		if err != nil {
+			failedWithError(&osr.Status.Status, err)
+		}
 
-	err = r.updateStatus(ctx, &osr)
-	if err != nil {
-		failedWithError(&osr.Status.Status, err)
 	}
 
 	if err = r.Status().Update(ctx, &osr); err != nil {

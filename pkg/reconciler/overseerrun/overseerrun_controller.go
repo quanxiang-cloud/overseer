@@ -133,7 +133,7 @@ func (r *OverseerRunReconciler) updateStatus(ctx context.Context, osr *v1alpha1.
 	obj := getter.New()
 
 	if err := r.Get(ctx, client.ObjectKey{Namespace: osr.Namespace, Name: ref.RefName}, obj); err != nil {
-		log.Error(err, "failed to get gbject", "refName", name)
+		log.Error(err, "failed to get object", "refName", ref.RefName)
 		ref.State = v1alpha1.StepConditionFail
 		return err
 	}

@@ -17,6 +17,9 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
     - jsonPath: .status.condition.status
       name: State
       type: string
@@ -100,6 +103,8 @@ spec:
                             failure and is meant for machine parsing and tidy display
                             in the CLI.
                           type: string
+                        refName:
+                          type: string
                         state:
                           type: string
                       type: object
@@ -110,6 +115,8 @@ spec:
                 required:
                 - status
                 type: object
+              phase:
+                type: string
             type: object
         type: object
     served: true

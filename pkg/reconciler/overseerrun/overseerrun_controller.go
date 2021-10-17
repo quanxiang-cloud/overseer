@@ -86,9 +86,9 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	if osr.Status.Condition.IsNil() {
-		osr.Status.Condition.Init()
-
+	// phase is not done and the ref is finish,do next step
+	if !osr.Status.Phase.IsDone() &&
+		osr.Status.Condition.IsFinish(osr.Status.Phase.Sting()) {
 		err = r.reconcile(ctx, &osr)
 		if err != nil {
 			failedWithError(&osr.Status.Status, err)
@@ -98,6 +98,7 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		if err != nil {
 			failedWithError(&osr.Status.Status, err)
 		}
+
 	}
 
 	if err = r.Status().Update(ctx, &osr); err != nil {
@@ -114,49 +115,37 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 func (r *OverseerRunReconciler) updateStatus(ctx context.Context, osr *v1alpha1.OverseerRun) error {
 	log := r.Log.WithName("updateStatus")
 
-	// the overseer run is done.
-	if osr.Status.Condition.Status == corev1.ConditionTrue ||
-		osr.Status.Condition.IsFalse() {
+	if osr.Status.Phase.IsDone() {
+		osr.Status.Condition.Status = corev1.ConditionTrue
 		return nil
 	}
 
-	var (
-		finsh     = true
-		condition = corev1.ConditionTrue
-	)
-	for name, ref := range osr.Status.Condition.ResourceRef {
-		if ref.State == v1alpha1.StepConditionSuccess {
-			// onle all success,the overseerRun will success.
-			continue
-		} else if ref.State == v1alpha1.StepConditionFail {
-			// one fail all fail.
-			condition = corev1.ConditionFalse
-			continue
-		}
-		finsh = false
+	name := osr.Status.Phase.Sting()
+	ref := osr.Status.Condition.ResourceRef[name]
 
-		getter, ok := artifactsv1alpha1.GetGetter(ref.GroupVersionKind)
-		if !ok {
-			err := fmt.Errorf("unknown gvk [%s]", ref.GroupVersionKind)
-			log.Error(err, "get object by gvk", "refName", name)
-			ref.State = v1alpha1.StepConditionFail
-			return err
-		}
-
-		obj := getter.New()
-
-		if err := r.Get(ctx, client.ObjectKey{Namespace: osr.Namespace, Name: name}, obj); err != nil {
-			log.Error(err, "failed to get gbject", "refName", name)
-			ref.State = v1alpha1.StepConditionFail
-			return err
-		}
-
-		osr.Status.Condition.ResourceRef[name] = getter.GetState(obj)
+	getter, ok := artifactsv1alpha1.GetGetter(ref.GroupVersionKind)
+	if !ok {
+		err := fmt.Errorf("unknown gvk [%s]", ref.GroupVersionKind)
+		log.Error(err, "get object by gvk", "refName", name)
+		ref.State = v1alpha1.StepConditionFail
+		return err
 	}
 
-	if finsh {
-		osr.Status.Condition.Status = condition
+	obj := getter.New()
+
+	if err := r.Get(ctx, client.ObjectKey{Namespace: osr.Namespace, Name: ref.RefName}, obj); err != nil {
+		log.Error(err, "failed to get object", "refName", ref.RefName)
+		ref.State = v1alpha1.StepConditionFail
+		return err
 	}
+
+	sc := getter.GetState(obj)
+	sc.RefName = ref.RefName
+
+	if sc.State == v1alpha1.StepConditionFail {
+		osr.Status.Condition.Status = corev1.ConditionFalse
+	}
+	osr.Status.Condition.ResourceRef[name] = sc
 	osr.Status.Condition.LastTransitionTime = metav1.NewTime(time.Now())
 	return nil
 }
@@ -172,7 +161,40 @@ func (r *OverseerRunReconciler) reconcile(ctx context.Context, osr *v1alpha1.Ove
 		return err
 	}
 
-	err = r.reconcileOverseer(ctx, osr, overseer)
+	if osr.Status.Condition.IsNil() {
+		osr.Status.Condition.Init()
+	}
+
+	var getNext = func(overseer *v1alpha1.Overseer, osr *v1alpha1.OverseerRun) *v1alpha1.StepSpec {
+		if len(overseer.Spec.Steps) == 0 {
+			return nil
+		}
+		if osr.Status.Phase.IsNil() {
+			return overseer.Spec.Steps[0].DeepCopy()
+		}
+
+		var index int
+		for i, step := range overseer.Spec.Steps {
+			if osr.Status.Phase.Equal(step.Name) {
+				index = i
+				break
+			}
+		}
+
+		if index+1 < len(overseer.Spec.Steps) {
+			return overseer.Spec.Steps[index+1].DeepCopy()
+		}
+
+		return nil
+	}
+
+	next := getNext(overseer, osr)
+	if next == nil {
+		osr.Status.Phase = v1alpha1.PhaseDone
+		return nil
+	}
+
+	err = r.reconcileStep(ctx, next, osr)
 	if err != nil {
 		return err
 	}
@@ -180,37 +202,37 @@ func (r *OverseerRunReconciler) reconcile(ctx context.Context, osr *v1alpha1.Ove
 	return nil
 }
 
-func (r *OverseerRunReconciler) reconcileOverseer(ctx context.Context, osr *v1alpha1.OverseerRun, overseer *v1alpha1.Overseer) error {
-	log := r.Log.WithName("reconcileOverseer")
+func (r *OverseerRunReconciler) reconcileStep(ctx context.Context, step *v1alpha1.StepSpec, osr *v1alpha1.OverseerRun) error {
+	log := r.Log.WithName("reconcileStep")
 
-	for _, step := range overseer.Spec.Steps {
-		m := r.materials.V1alpha1()
-		obj, err := m.
-			Body([]byte(step.Template)).
-			Param(osr.Spec.Params).
-			Do(materialsv1alpha1.WithNamespace(overseer.Namespace),
-				materialsv1alpha1.WithAttachedGenerateName(osr.Name),
-			)
+	m := r.materials.V1alpha1()
+	obj, err := m.
+		Body([]byte(step.Template)).
+		Param(osr.Spec.Params).
+		Do(materialsv1alpha1.WithNamespace(osr.Namespace),
+			materialsv1alpha1.WithAttachedGenerateName(osr.Name),
+		)
 
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
+	}
 
-		obj.SetOwnerReferences(nil)
-		if err := ctrl.SetControllerReference(osr, obj, r.Scheme); err != nil {
-			log.Error(err, "Failed to SetControllerReference", "step", step.Name)
-			return err
-		}
+	obj.SetOwnerReferences(nil)
+	if err := ctrl.SetControllerReference(osr, obj, r.Scheme); err != nil {
+		log.Error(err, "Failed to SetControllerReference", "step", step.Name)
+		return err
+	}
 
-		if err = r.Create(ctx, obj); err != nil {
-			log.Error(err, "Failed to create obj")
-			return err
-		}
+	if err = r.Create(ctx, obj); err != nil {
+		log.Error(err, "Failed to create obj")
+		return err
+	}
 
-		osr.Status.Condition.ResourceRef[obj.GetName()] = v1alpha1.StepCondition{
-			GroupVersionKind: m.GetGroupVersionKind().String(),
-			State:            v1alpha1.StepConditionUnknown,
-		}
+	osr.Status.Phase = v1alpha1.Phase(step.Name)
+	osr.Status.Condition.ResourceRef[step.Name] = v1alpha1.StepCondition{
+		GroupVersionKind: m.GetGroupVersionKind().String(),
+		RefName:          obj.GetName(),
+		State:            v1alpha1.StepConditionUnknown,
 	}
 
 	return nil

@@ -40,6 +40,8 @@ type OverseerRunStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	Phase Phase `json:"phase,omitempty"`
+
 	Status `json:",inline"`
 }
 
@@ -47,6 +49,7 @@ type OverseerRunStatus struct {
 //+kubebuilder:subresource:status
 //+kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.condition.status`
 //+kubebuilder:printcolumn:name="Reason",type=string,JSONPath=`.status.condition.reason`
+//+kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
 //+kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // OverseerRun is the Schema for the overseerruns API

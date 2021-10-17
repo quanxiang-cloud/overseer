@@ -40,11 +40,14 @@ type OverseerRunStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	Phase Phase `json:"phase,omitempty"`
+
 	Status `json:",inline"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.condition.phase`
 //+kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.condition.status`
 //+kubebuilder:printcolumn:name="Reason",type=string,JSONPath=`.status.condition.reason`
 //+kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`

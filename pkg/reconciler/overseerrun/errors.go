@@ -6,12 +6,12 @@ import (
 )
 
 // failedWithError filedc with error.
-func failedWithError(status *v1alpha1.Status, err error) {
+func failedWithError(osrs *v1alpha1.OverseerRunStatus, err error) {
 	if err == nil {
 		return
 	}
 
-	status.Condition.Status = corev1.ConditionFalse
-	status.Condition.Reason = "Error"
-	status.Condition.Message = err.Error()
+	osrs.Status = corev1.ConditionFalse
+	osrs.Reason = "Error"
+	osrs.Message = err.Error()
 }

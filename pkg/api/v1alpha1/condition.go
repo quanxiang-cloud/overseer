@@ -5,55 +5,33 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Condition defines a readiness condition
-type Condition struct {
-	// Status of the condition, one of True, False, Unknown.
-	// +required
-	Status corev1.ConditionStatus `json:"status"`
-
-	// The reason for the condition's last transition.
-	// +optional
-	Reason string `json:"reason,omitempty"`
-
-	// A human readable message indicating details about the transition.
-	// +optional
-	Message string `json:"message,omitempty"`
-
-	// +required
-	ResourceRef map[string]StepCondition `json:"resourceRef,omitempty"`
-
-	// LastTransitionTime is the last time the condition transitioned from one status to another.
-	// +optional
-	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
+func (o *OverseerRunStatus) IsNil() bool {
+	return o.Status == ""
 }
 
-func (c *Condition) IsNil() bool {
-	return c.Status == ""
+func (o *OverseerRunStatus) Init() {
+	o.Status = corev1.ConditionUnknown
+	o.ResourceRef = make(map[string]RefCondition)
 }
 
-func (c *Condition) Init() {
-	c.Status = corev1.ConditionUnknown
-	c.ResourceRef = make(map[string]StepCondition)
+func (o *OverseerRunStatus) IsUnknown() bool {
+	return o.Status == corev1.ConditionUnknown
 }
 
-func (c *Condition) IsUnknown() bool {
-	return c.Status == corev1.ConditionUnknown
+func (o *OverseerRunStatus) IsTrue() bool {
+	return o.Status == corev1.ConditionTrue
 }
 
-func (c *Condition) IsTrue() bool {
-	return c.Status == corev1.ConditionTrue
+func (o *OverseerRunStatus) IsFalse() bool {
+	return o.Status == corev1.ConditionFalse
 }
 
-func (c *Condition) IsFalse() bool {
-	return c.Status == corev1.ConditionFalse
-}
-
-func (c *Condition) IsFinish(name string) bool {
-	if c.ResourceRef == nil {
+func (o *OverseerRunStatus) IsFinish(name string) bool {
+	if o.ResourceRef == nil {
 		return true
 	}
 
-	ref, ok := c.ResourceRef[name]
+	ref, ok := o.ResourceRef[name]
 	if !ok {
 		return true
 	}
@@ -61,22 +39,41 @@ func (c *Condition) IsFinish(name string) bool {
 	return ref.IsFinish()
 }
 
-type StepConditionType string
-
-const (
-	StepConditionUnknown = "Unknown"
-	StepConditionPending = "Pending"
-	StepConditionRunning = "Running"
-	StepConditionSuccess = "Success"
-	StepConditionFail    = "Fail"
-)
-
-type StepCondition struct {
+type RefCondition struct {
 	GroupVersionKind string `json:"groupVersionKind,omitempty"`
 
-	RefName string `json:"refName,omitempty"`
+	Name string `json:"name,omitempty"`
 
-	State StepConditionType `json:"state,omitempty"`
+	Conditions []Condition `json:"conditions,omitempty"`
+}
+
+func (r *RefCondition) IsFinish() bool {
+	for _, elem := range r.Conditions {
+		if elem.Status == corev1.ConditionFalse ||
+			elem.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (r *RefCondition) IsFalse() bool {
+	for _, elem := range r.Conditions {
+		if elem.Status == corev1.ConditionFalse {
+			return true
+		}
+	}
+
+	return false
+}
+
+type Condition struct {
+	Status corev1.ConditionStatus `json:"status,omitempty"`
+
+	// Last time the condition transitioned from one status to another.
+	// +optional
+	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty" protobuf:"bytes,4,opt,name=lastTransitionTime"`
 
 	// A human-readable message indicating details about why the volume is in this state.
 	// +optional
@@ -85,11 +82,6 @@ type StepCondition struct {
 	// for machine parsing and tidy display in the CLI.
 	// +optional
 	Reason string `json:"reason,omitempty" protobuf:"bytes,3,opt,name=reason"`
-}
-
-func (s StepCondition) IsFinish() bool {
-	return s.State == StepConditionSuccess ||
-		s.State == StepConditionFail
 }
 
 type Phase string

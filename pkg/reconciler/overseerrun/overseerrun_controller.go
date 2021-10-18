@@ -82,23 +82,22 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	if osr.Status.Condition.IsTrue() || osr.Status.Condition.IsFalse() {
+	if osr.Status.IsTrue() || osr.Status.IsFalse() {
 		return ctrl.Result{}, err
 	}
 
 	// phase is not done and the ref is finish,do next step
 	if !osr.Status.Phase.IsDone() &&
-		osr.Status.Condition.IsFinish(osr.Status.Phase.Sting()) {
+		osr.Status.IsFinish(osr.Status.Phase.Sting()) {
 		err = r.reconcile(ctx, &osr)
 		if err != nil {
-			failedWithError(&osr.Status.Status, err)
+			failedWithError(&osr.Status, err)
 		}
-	} else {
-		err = r.updateStatus(ctx, &osr)
-		if err != nil {
-			failedWithError(&osr.Status.Status, err)
-		}
+	}
 
+	err = r.updateStatus(ctx, &osr)
+	if err != nil {
+		failedWithError(&osr.Status, err)
 	}
 
 	if err = r.Status().Update(ctx, &osr); err != nil {
@@ -116,37 +115,41 @@ func (r *OverseerRunReconciler) updateStatus(ctx context.Context, osr *v1alpha1.
 	log := r.Log.WithName("updateStatus")
 
 	if osr.Status.Phase.IsDone() {
-		osr.Status.Condition.Status = corev1.ConditionTrue
+		osr.Status.Status = corev1.ConditionTrue
 		return nil
 	}
 
 	name := osr.Status.Phase.Sting()
-	ref := osr.Status.Condition.ResourceRef[name]
+	ref := osr.Status.ResourceRef[name]
 
 	getter, ok := artifactsv1alpha1.GetGetter(ref.GroupVersionKind)
 	if !ok {
 		err := fmt.Errorf("unknown gvk [%s]", ref.GroupVersionKind)
 		log.Error(err, "get object by gvk", "refName", name)
-		ref.State = v1alpha1.StepConditionFail
+		osr.Status.Status = corev1.ConditionFalse
 		return err
 	}
 
 	obj := getter.New()
 
-	if err := r.Get(ctx, client.ObjectKey{Namespace: osr.Namespace, Name: ref.RefName}, obj); err != nil {
-		log.Error(err, "failed to get object", "refName", ref.RefName)
-		ref.State = v1alpha1.StepConditionFail
+	if err := r.Get(ctx, client.ObjectKey{Namespace: osr.Namespace, Name: ref.Name}, obj); err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		}
+		log.Error(err, "failed to get object", "ref.Name", ref.Name)
+		osr.Status.Status = corev1.ConditionFalse
 		return err
 	}
 
-	sc := getter.GetState(obj)
-	sc.RefName = ref.RefName
+	sc := getter.GetCondition(obj)
+	sc.Name = ref.Name
 
-	if sc.State == v1alpha1.StepConditionFail {
-		osr.Status.Condition.Status = corev1.ConditionFalse
+	if sc.IsFalse() {
+		osr.Status.Status = corev1.ConditionFalse
 	}
-	osr.Status.Condition.ResourceRef[name] = sc
-	osr.Status.Condition.LastTransitionTime = metav1.NewTime(time.Now())
+
+	osr.Status.ResourceRef[name] = sc
+	osr.Status.LastTransitionTime = metav1.NewTime(time.Now())
 	return nil
 }
 
@@ -161,8 +164,8 @@ func (r *OverseerRunReconciler) reconcile(ctx context.Context, osr *v1alpha1.Ove
 		return err
 	}
 
-	if osr.Status.Condition.IsNil() {
-		osr.Status.Condition.Init()
+	if osr.Status.IsNil() {
+		osr.Status.Init()
 	}
 
 	var getNext = func(overseer *v1alpha1.Overseer, osr *v1alpha1.OverseerRun) *v1alpha1.StepSpec {
@@ -191,6 +194,7 @@ func (r *OverseerRunReconciler) reconcile(ctx context.Context, osr *v1alpha1.Ove
 	next := getNext(overseer, osr)
 	if next == nil {
 		osr.Status.Phase = v1alpha1.PhaseDone
+		osr.Status.Status = corev1.ConditionTrue
 		return nil
 	}
 
@@ -229,10 +233,9 @@ func (r *OverseerRunReconciler) reconcileStep(ctx context.Context, step *v1alpha
 	}
 
 	osr.Status.Phase = v1alpha1.Phase(step.Name)
-	osr.Status.Condition.ResourceRef[step.Name] = v1alpha1.StepCondition{
+	osr.Status.ResourceRef[step.Name] = v1alpha1.RefCondition{
 		GroupVersionKind: m.GetGroupVersionKind().String(),
-		RefName:          obj.GetName(),
-		State:            v1alpha1.StepConditionUnknown,
+		Name:             obj.GetName(),
 	}
 
 	return nil

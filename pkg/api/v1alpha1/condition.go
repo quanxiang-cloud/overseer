@@ -48,6 +48,19 @@ func (c *Condition) IsFalse() bool {
 	return c.Status == corev1.ConditionFalse
 }
 
+func (c *Condition) IsFinish(name string) bool {
+	if c.ResourceRef == nil {
+		return true
+	}
+
+	ref, ok := c.ResourceRef[name]
+	if !ok {
+		return true
+	}
+
+	return ref.IsFinish()
+}
+
 type StepConditionType string
 
 const (
@@ -61,6 +74,8 @@ const (
 type StepCondition struct {
 	GroupVersionKind string `json:"groupVersionKind,omitempty"`
 
+	RefName string `json:"refName,omitempty"`
+
 	State StepConditionType `json:"state,omitempty"`
 
 	// A human-readable message indicating details about why the volume is in this state.
@@ -70,4 +85,31 @@ type StepCondition struct {
 	// for machine parsing and tidy display in the CLI.
 	// +optional
 	Reason string `json:"reason,omitempty" protobuf:"bytes,3,opt,name=reason"`
+}
+
+func (s StepCondition) IsFinish() bool {
+	return s.State == StepConditionSuccess ||
+		s.State == StepConditionFail
+}
+
+type Phase string
+
+const (
+	PhaseDone Phase = "Done"
+)
+
+func (p *Phase) IsDone() bool {
+	return *p == PhaseDone
+}
+
+func (p *Phase) Equal(val string) bool {
+	return string(*p) == val
+}
+
+func (p *Phase) IsNil() bool {
+	return *p == ""
+}
+
+func (p *Phase) Sting() string {
+	return string(*p)
 }

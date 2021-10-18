@@ -26,7 +26,14 @@ func WithNamespace(namespace string) Options {
 
 func WithAttachedGenerateName(name string) Options {
 	return func(obj client.Object) {
-		obj.SetGenerateName(fmt.Sprintf("%s-%s-", name, obj.GetName()))
+		if obj.GetName() != "" {
+			return
+		}
+		if obj.GetGenerateName() != "" {
+			obj.SetGenerateName(fmt.Sprintf("%s-%s-", name, obj.GetGenerateName()))
+		} else {
+			obj.SetGenerateName(fmt.Sprintf("%s-", name))
+		}
 		obj.SetName("")
 	}
 }

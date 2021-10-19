@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -42,13 +43,28 @@ type OverseerRunStatus struct {
 
 	Phase Phase `json:"phase,omitempty"`
 
-	Status `json:",inline"`
+	Status corev1.ConditionStatus `json:"status"`
+
+	// The reason for the condition's last transition.
+	// +optional
+	Reason string `json:"reason,omitempty"`
+
+	// A human readable message indicating details about the transition.
+	// +optional
+	Message string `json:"message,omitempty"`
+
+	// +required
+	ResourceRef map[string]RefCondition `json:"resourceRef,omitempty"`
+
+	// LastTransitionTime is the last time the condition transitioned from one status to another.
+	// +optional
+	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-//+kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.condition.status`
-//+kubebuilder:printcolumn:name="Reason",type=string,JSONPath=`.status.condition.reason`
+//+kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.status`
+//+kubebuilder:printcolumn:name="Reason",type=string,JSONPath=`.status.reason`
 //+kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
 //+kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
@@ -74,8 +90,4 @@ type OverseerRunList struct {
 type OverseerRef struct {
 	// Name of the referent
 	Name string `json:"name,omitempty"`
-}
-
-type Status struct {
-	Condition Condition `json:"condition,omitempty" `
 }

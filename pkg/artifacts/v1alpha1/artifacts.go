@@ -7,7 +7,7 @@ import (
 	pipeline1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -58,7 +58,7 @@ func ParseGroupVersionKind(gvk string) schema.GroupVersionKind {
 }
 
 type Getter interface {
-	GetState(obj client.Object) osv1alpha1.StepCondition
+	GetCondition(obj client.Object) osv1alpha1.RefCondition
 	New() client.Object
 }
 
@@ -69,13 +69,19 @@ func (c *ConfigMap) New() client.Object {
 	return &corev1.ConfigMap{}
 }
 
-func (c *ConfigMap) GetState(obj client.Object) osv1alpha1.StepCondition {
+func (c *ConfigMap) GetCondition(obj client.Object) osv1alpha1.RefCondition {
 	o := obj.(*corev1.ConfigMap)
-	sc := osv1alpha1.StepCondition{
+	sc := osv1alpha1.RefCondition{
 		GroupVersionKind: o.GroupVersionKind().String(),
 	}
 
-	sc.State = osv1alpha1.StepConditionSuccess
+	sc.Conditions = []osv1alpha1.Condition{
+		{
+			Status:             corev1.ConditionTrue,
+			LastTransitionTime: o.CreationTimestamp,
+		},
+	}
+
 	return sc
 }
 
@@ -86,24 +92,32 @@ func (p *PersistentVolume) New() client.Object {
 	return &corev1.PersistentVolume{}
 }
 
-func (p *PersistentVolume) GetState(obj client.Object) osv1alpha1.StepCondition {
+func (p *PersistentVolume) GetCondition(obj client.Object) osv1alpha1.RefCondition {
 	o := obj.(*corev1.PersistentVolume)
 
-	sc := osv1alpha1.StepCondition{
+	sc := osv1alpha1.RefCondition{
 		GroupVersionKind: o.GroupVersionKind().String(),
 	}
 
+	var state corev1.ConditionStatus
+
 	switch o.Status.Phase {
 	case corev1.VolumeFailed:
-		sc.State = osv1alpha1.StepConditionFail
+		state = corev1.ConditionFalse
 	case corev1.VolumePending:
-		sc.State = osv1alpha1.StepConditionPending
+		state = corev1.ConditionUnknown
 	default:
-		sc.State = osv1alpha1.StepConditionSuccess
+		state = corev1.ConditionTrue
 	}
 
-	sc.Message = o.Status.Message
-	sc.Reason = o.Status.Reason
+	sc.Conditions = []osv1alpha1.Condition{
+		{
+			Status:             state,
+			LastTransitionTime: o.CreationTimestamp,
+			Message:            o.Status.Message,
+			Reason:             o.Status.Reason,
+		},
+	}
 	return sc
 }
 
@@ -114,39 +128,40 @@ func (p *PersistentVolumeClaim) New() client.Object {
 	return &corev1.PersistentVolumeClaim{}
 }
 
-func (p *PersistentVolumeClaim) GetState(obj client.Object) osv1alpha1.StepCondition {
+func (p *PersistentVolumeClaim) GetCondition(obj client.Object) osv1alpha1.RefCondition {
 	o := obj.(*corev1.PersistentVolumeClaim)
 
-	sc := osv1alpha1.StepCondition{
+	sc := osv1alpha1.RefCondition{
 		GroupVersionKind: o.GroupVersionKind().String(),
 	}
 
+	var state corev1.ConditionStatus
+
 	switch o.Status.Phase {
 	case corev1.ClaimPending:
-		sc.State = osv1alpha1.StepConditionPending
+		state = corev1.ConditionUnknown
 	case corev1.ClaimBound:
-		sc.State = osv1alpha1.StepConditionSuccess
+		state = corev1.ConditionTrue
 	default:
-		sc.State = osv1alpha1.StepConditionFail
+		state = corev1.ConditionUnknown
 	}
 
-	size := len(o.Status.Conditions)
-	if size == 0 {
-		return sc
+	sc.Conditions = []osv1alpha1.Condition{
+		{
+			Status:             state,
+			LastTransitionTime: o.CreationTimestamp,
+		},
 	}
 
-	condition := o.Status.Conditions[size-1]
-	switch condition.Status {
-	case corev1.ConditionFalse:
-		sc.State = osv1alpha1.StepConditionFail
-	case corev1.ConditionTrue:
-		sc.State = osv1alpha1.StepConditionSuccess
-	default:
-		sc.State = osv1alpha1.StepConditionUnknown
-	}
+	for _, condition := range o.Status.Conditions {
+		sc.Conditions = append(sc.Conditions, osv1alpha1.Condition{
+			Status:             condition.Status,
+			LastTransitionTime: condition.LastTransitionTime,
+			Message:            condition.Message,
+			Reason:             condition.Reason,
+		})
 
-	sc.Message = condition.Message
-	sc.Reason = condition.Reason
+	}
 
 	return sc
 }
@@ -158,31 +173,24 @@ func (t *TaskRun) New() client.Object {
 	return &pipeline1beta1.TaskRun{}
 }
 
-func (t *TaskRun) GetState(obj client.Object) osv1alpha1.StepCondition {
+func (t *TaskRun) GetCondition(obj client.Object) osv1alpha1.RefCondition {
 	o := obj.(*pipeline1beta1.TaskRun)
 
-	sc := osv1alpha1.StepCondition{
+	sc := osv1alpha1.RefCondition{
 		GroupVersionKind: o.GroupVersionKind().String(),
+		Conditions:       make([]osv1alpha1.Condition, 0),
 	}
 
-	size := len(o.Status.Conditions)
-	if size == 0 {
-		return sc
+	for _, condition := range o.Status.Conditions {
+		sc.Conditions = append(sc.Conditions, osv1alpha1.Condition{
+			Status:             condition.Status,
+			LastTransitionTime: condition.LastTransitionTime.Inner,
+			Message:            condition.Message,
+			Reason:             condition.Reason,
+		})
+
 	}
 
-	condition := o.Status.Conditions[size-1]
-
-	switch condition.Status {
-	case corev1.ConditionFalse:
-		sc.State = osv1alpha1.StepConditionFail
-	case corev1.ConditionTrue:
-		sc.State = osv1alpha1.StepConditionSuccess
-	default:
-		sc.State = osv1alpha1.StepConditionUnknown
-	}
-
-	sc.Message = condition.Message
-	sc.Reason = condition.Reason
 	return sc
 }
 
@@ -192,32 +200,23 @@ func (p *PipelineRun) New() client.Object {
 	return &pipeline1beta1.PipelineRun{}
 }
 
-func (p *PipelineRun) GetState(obj client.Object) osv1alpha1.StepCondition {
+func (p *PipelineRun) GetCondition(obj client.Object) osv1alpha1.RefCondition {
 	o := obj.(*pipeline1beta1.PipelineRun)
 
-	sc := osv1alpha1.StepCondition{
+	sc := osv1alpha1.RefCondition{
 		GroupVersionKind: o.GroupVersionKind().String(),
+		Conditions:       make([]osv1alpha1.Condition, 0),
 	}
 
-	size := len(o.Status.Conditions)
-	if size == 0 {
-		return sc
+	for _, condition := range o.Status.Conditions {
+		sc.Conditions = append(sc.Conditions, osv1alpha1.Condition{
+			Status:             condition.Status,
+			LastTransitionTime: condition.LastTransitionTime.Inner,
+			Message:            condition.Message,
+			Reason:             condition.Reason,
+		})
+
 	}
-
-	condition := o.Status.Conditions[size-1]
-
-	switch condition.Status {
-	case corev1.ConditionFalse:
-		sc.State = osv1alpha1.StepConditionFail
-	case corev1.ConditionTrue:
-		sc.State = osv1alpha1.StepConditionSuccess
-	default:
-		sc.State = osv1alpha1.StepConditionUnknown
-	}
-
-	sc.Message = condition.Message
-	sc.Reason = condition.Reason
-
 	return sc
 }
 
@@ -227,33 +226,22 @@ func (d *Deployment) New() client.Object {
 	return &appsv1.Deployment{}
 }
 
-func (d *Deployment) GetState(obj client.Object) osv1alpha1.StepCondition {
-
+func (d *Deployment) GetCondition(obj client.Object) osv1alpha1.RefCondition {
 	o := obj.(*appsv1.Deployment)
-
-	sc := osv1alpha1.StepCondition{
+	sc := osv1alpha1.RefCondition{
 		GroupVersionKind: o.GroupVersionKind().String(),
+		Conditions:       make([]osv1alpha1.Condition, 0),
 	}
 
-	size := len(o.Status.Conditions)
-	if size == 0 {
-		return sc
+	for _, condition := range o.Status.Conditions {
+		sc.Conditions = append(sc.Conditions, osv1alpha1.Condition{
+			Status:             condition.Status,
+			LastTransitionTime: condition.LastTransitionTime,
+			Message:            condition.Message,
+			Reason:             condition.Reason,
+		})
+
 	}
-
-	condition := o.Status.Conditions[size-1]
-
-	switch condition.Status {
-	case corev1.ConditionFalse:
-		sc.State = osv1alpha1.StepConditionFail
-	case corev1.ConditionTrue:
-		sc.State = osv1alpha1.StepConditionSuccess
-	default:
-		sc.State = osv1alpha1.StepConditionUnknown
-	}
-
-	sc.Message = condition.Message
-	sc.Reason = condition.Reason
-
 	return sc
 }
 
@@ -263,31 +251,34 @@ func (s *Service) New() client.Object {
 	return &corev1.Service{}
 }
 
-func (s *Service) GetState(obj client.Object) osv1alpha1.StepCondition {
+func (s *Service) GetCondition(obj client.Object) osv1alpha1.RefCondition {
 	o := obj.(*corev1.Service)
-
-	sc := osv1alpha1.StepCondition{
+	sc := osv1alpha1.RefCondition{
 		GroupVersionKind: o.GroupVersionKind().String(),
+		Conditions:       make([]osv1alpha1.Condition, 0),
 	}
 
-	size := len(o.Status.Conditions)
-	if size == 0 {
-		return sc
+	for _, condition := range o.Status.Conditions {
+		var state corev1.ConditionStatus
+		switch condition.Status {
+		case v1.ConditionTrue:
+			state = corev1.ConditionTrue
+		case v1.ConditionFalse:
+			state = corev1.ConditionFalse
+		case v1.ConditionUnknown:
+			state = corev1.ConditionUnknown
+		default:
+			state = corev1.ConditionUnknown
+		}
+
+		sc.Conditions = append(sc.Conditions, osv1alpha1.Condition{
+			Status:             state,
+			LastTransitionTime: condition.LastTransitionTime,
+			Message:            condition.Message,
+			Reason:             condition.Reason,
+		})
+
 	}
-
-	condition := o.Status.Conditions[size-1]
-
-	switch condition.Status {
-	case metav1.ConditionFalse:
-		sc.State = osv1alpha1.StepConditionFail
-	case metav1.ConditionTrue:
-		sc.State = osv1alpha1.StepConditionSuccess
-	default:
-		sc.State = osv1alpha1.StepConditionUnknown
-	}
-
-	sc.Message = condition.Message
-	sc.Reason = condition.Reason
 
 	return sc
 }

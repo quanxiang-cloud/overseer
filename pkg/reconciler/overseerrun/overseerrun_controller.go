@@ -91,13 +91,13 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		osr.Status.IsFinish(osr.Status.Phase.Sting()) {
 		err = r.reconcile(ctx, &osr)
 		if err != nil {
-			failedWithError(&osr.Status, err)
+			return r.failedWithError(ctx, &osr, err)
 		}
 	}
 
 	err = r.updateStatus(ctx, &osr)
 	if err != nil {
-		failedWithError(&osr.Status, err)
+		return r.failedWithError(ctx, &osr, err)
 	}
 
 	if err = r.Status().Update(ctx, &osr); err != nil {
@@ -109,6 +109,11 @@ func (r *OverseerRunReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	return ctrl.Result{
 		RequeueAfter: time.Second * 10,
 	}, err
+}
+
+func (r *OverseerRunReconciler) failedWithError(ctx context.Context, osr *v1alpha1.OverseerRun, err error) (ctrl.Result, error) {
+	failedWithError(&osr.Status, err)
+	return ctrl.Result{}, r.Status().Update(ctx, osr)
 }
 
 func (r *OverseerRunReconciler) updateStatus(ctx context.Context, osr *v1alpha1.OverseerRun) error {

@@ -19,12 +19,15 @@ func init() {
 	depot = make(map[schema.GroupVersionKind]Getter)
 	depot[corev1.SchemeGroupVersion.WithKind("Service")] = &Service{}
 	depot[corev1.SchemeGroupVersion.WithKind("ConfigMap")] = &ConfigMap{}
-	depot[corev1.SchemeGroupVersion.WithKind("PersistentVolumeClaim")] = &PersistentVolumeClaim{}
 	depot[corev1.SchemeGroupVersion.WithKind("PersistentVolume")] = &PersistentVolume{}
+	depot[corev1.SchemeGroupVersion.WithKind("PersistentVolumeClaim")] = &PersistentVolumeClaim{}
+
+	depot[appsv1.SchemeGroupVersion.WithKind("Deployment")] = &Deployment{}
+
 	depot[pipeline1beta1.SchemeGroupVersion.WithKind("TaskRun")] = &TaskRun{}
 	depot[pipeline1beta1.SchemeGroupVersion.WithKind("PipelineRun")] = &PipelineRun{}
 	depot[knativev1.SchemeGroupVersion.WithKind("Service")] = &KnativeService{}
-	depot[appsv1.SchemeGroupVersion.WithKind("Deployment")] = &Deployment{}
+
 }
 
 func GetObj(gkv schema.GroupVersionKind) (client.Object, bool) {
@@ -62,6 +65,44 @@ func ParseGroupVersionKind(gvk string) schema.GroupVersionKind {
 type Getter interface {
 	GetCondition(obj client.Object) osv1alpha1.RefCondition
 	New() client.Object
+}
+
+type Service struct{}
+
+func (s *Service) New() client.Object {
+	return &corev1.Service{}
+}
+
+func (s *Service) GetCondition(obj client.Object) osv1alpha1.RefCondition {
+	o := obj.(*corev1.Service)
+	sc := osv1alpha1.RefCondition{
+		GroupVersionKind: o.GroupVersionKind().String(),
+		Conditions:       make([]osv1alpha1.Condition, 0),
+	}
+
+	for _, condition := range o.Status.Conditions {
+		var state corev1.ConditionStatus
+		switch condition.Status {
+		case v1.ConditionTrue:
+			state = corev1.ConditionTrue
+		case v1.ConditionFalse:
+			state = corev1.ConditionFalse
+		case v1.ConditionUnknown:
+			state = corev1.ConditionUnknown
+		default:
+			state = corev1.ConditionUnknown
+		}
+
+		sc.Conditions = append(sc.Conditions, osv1alpha1.Condition{
+			Status:             state,
+			LastTransitionTime: condition.LastTransitionTime,
+			Message:            condition.Message,
+			Reason:             condition.Reason,
+		})
+
+	}
+
+	return sc
 }
 
 type ConfigMap struct {
@@ -271,43 +312,5 @@ func (d *Deployment) GetCondition(obj client.Object) osv1alpha1.RefCondition {
 		})
 
 	}
-	return sc
-}
-
-type Service struct{}
-
-func (s *Service) New() client.Object {
-	return &corev1.Service{}
-}
-
-func (s *Service) GetCondition(obj client.Object) osv1alpha1.RefCondition {
-	o := obj.(*corev1.Service)
-	sc := osv1alpha1.RefCondition{
-		GroupVersionKind: o.GroupVersionKind().String(),
-		Conditions:       make([]osv1alpha1.Condition, 0),
-	}
-
-	for _, condition := range o.Status.Conditions {
-		var state corev1.ConditionStatus
-		switch condition.Status {
-		case v1.ConditionTrue:
-			state = corev1.ConditionTrue
-		case v1.ConditionFalse:
-			state = corev1.ConditionFalse
-		case v1.ConditionUnknown:
-			state = corev1.ConditionUnknown
-		default:
-			state = corev1.ConditionUnknown
-		}
-
-		sc.Conditions = append(sc.Conditions, osv1alpha1.Condition{
-			Status:             state,
-			LastTransitionTime: condition.LastTransitionTime,
-			Message:            condition.Message,
-			Reason:             condition.Reason,
-		})
-
-	}
-
 	return sc
 }

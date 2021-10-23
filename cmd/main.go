@@ -38,6 +38,7 @@ import (
 	overseerInformers "github.com/quanxiang-cloud/overseer/pkg/client/informers/overseer"
 	listersv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/listers/v1alpha1"
 	"github.com/quanxiang-cloud/overseer/pkg/reconciler/overseerrun"
+	knativev1 "knative.dev/serving/pkg/apis/serving/v1"
 
 	//+kubebuilder:scaffold:imports
 
@@ -56,6 +57,7 @@ func init() {
 	//+kubebuilder:scaffold:scheme
 
 	utilruntime.Must(pipeline1beta1.AddToScheme(scheme))
+	utilruntime.Must(knativev1.AddToScheme(scheme))
 }
 
 func main() {

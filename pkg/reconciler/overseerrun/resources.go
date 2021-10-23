@@ -5,6 +5,7 @@ package overseerrun
 //+kubebuilder:rbac:groups=quanxiang.cloud.io,resources=overseers/finalizers,verbs=update
 
 //+kubebuilder:rbac:groups=tekton.dev,resources=pipelineruns;taskruns,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=serving.knative.dev,resources=service,verbs=get;list;watch;create;update;patch;delete
 
 //+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete

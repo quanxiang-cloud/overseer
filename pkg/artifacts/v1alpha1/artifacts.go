@@ -9,6 +9,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	knativev1 "knative.dev/serving/pkg/apis/serving/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -22,6 +23,7 @@ func init() {
 	depot[corev1.SchemeGroupVersion.WithKind("PersistentVolume")] = &PersistentVolume{}
 	depot[pipeline1beta1.SchemeGroupVersion.WithKind("TaskRun")] = &TaskRun{}
 	depot[pipeline1beta1.SchemeGroupVersion.WithKind("PipelineRun")] = &PipelineRun{}
+	depot[knativev1.SchemeGroupVersion.WithKind("Service")] = &KnativeService{}
 	depot[appsv1.SchemeGroupVersion.WithKind("Deployment")] = &Deployment{}
 }
 
@@ -217,6 +219,33 @@ func (p *PipelineRun) GetCondition(obj client.Object) osv1alpha1.RefCondition {
 		})
 
 	}
+	return sc
+}
+
+type KnativeService struct{}
+
+func (k *KnativeService) New() client.Object {
+	return &knativev1.Service{}
+}
+
+func (k *KnativeService) GetCondition(obj client.Object) osv1alpha1.RefCondition {
+	o := obj.(*knativev1.Service)
+
+	sc := osv1alpha1.RefCondition{
+		GroupVersionKind: o.GroupVersionKind().String(),
+		Conditions:       make([]osv1alpha1.Condition, 0),
+	}
+
+	for _, condition := range o.Status.Conditions {
+		sc.Conditions = append(sc.Conditions, osv1alpha1.Condition{
+			Status:             condition.Status,
+			LastTransitionTime: condition.LastTransitionTime.Inner,
+			Message:            condition.Message,
+			Reason:             condition.Reason,
+		})
+
+	}
+
 	return sc
 }
 

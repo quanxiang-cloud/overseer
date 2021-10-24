@@ -119,6 +119,18 @@ rules:
   - patch
   - update
 - apiGroups:
+  - serving.knative.dev
+  resources:
+  - service
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - tekton.dev
   resources:
   - pipelineruns

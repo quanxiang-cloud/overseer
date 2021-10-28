@@ -3,7 +3,7 @@ package v1alpha1
 import (
 	"bytes"
 	"fmt"
-	"html/template"
+	"text/template"
 
 	"github.com/ghodss/yaml"
 	apiv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
@@ -102,7 +102,7 @@ func templateExecute(values interface{}, tmpl string) (string, error) {
 	if err != nil {
 		return tmpl, err
 	}
-
+	fmt.Println(buf.String())
 	return buf.String(), nil
 }
 

@@ -7,7 +7,6 @@ import (
 	pipeline1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	knativev1 "knative.dev/serving/pkg/apis/serving/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -80,26 +79,11 @@ func (s *Service) GetCondition(obj client.Object) osv1alpha1.RefCondition {
 		Conditions:       make([]osv1alpha1.Condition, 0),
 	}
 
-	for _, condition := range o.Status.Conditions {
-		var state corev1.ConditionStatus
-		switch condition.Status {
-		case v1.ConditionTrue:
-			state = corev1.ConditionTrue
-		case v1.ConditionFalse:
-			state = corev1.ConditionFalse
-		case v1.ConditionUnknown:
-			state = corev1.ConditionUnknown
-		default:
-			state = corev1.ConditionUnknown
-		}
-
-		sc.Conditions = append(sc.Conditions, osv1alpha1.Condition{
-			Status:             state,
-			LastTransitionTime: condition.LastTransitionTime,
-			Message:            condition.Message,
-			Reason:             condition.Reason,
-		})
-
+	sc.Conditions = []osv1alpha1.Condition{
+		{
+			Status:             corev1.ConditionTrue,
+			LastTransitionTime: o.CreationTimestamp,
+		},
 	}
 
 	return sc

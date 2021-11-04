@@ -102,7 +102,7 @@ func templateExecute(values interface{}, tmpl string) (string, error) {
 	if err != nil {
 		return tmpl, err
 	}
-	fmt.Println(buf.String())
+
 	return buf.String(), nil
 }
 

@@ -49,13 +49,12 @@ type RefCondition struct {
 
 func (r *RefCondition) IsFinish() bool {
 	for _, elem := range r.Conditions {
-		if elem.Status == corev1.ConditionFalse ||
-			elem.Status == corev1.ConditionTrue {
-			return true
+		if elem.Status == corev1.ConditionUnknown {
+			return false
 		}
 	}
 
-	return false
+	return true
 }
 
 func (r *RefCondition) IsFalse() bool {

@@ -288,13 +288,16 @@ func (d *Deployment) GetCondition(obj client.Object) osv1alpha1.RefCondition {
 	}
 
 	for _, condition := range o.Status.Conditions {
+		state := condition.Status
+		if condition.Reason == "MinimumReplicasUnavailable" {
+			state = corev1.ConditionUnknown
+		}
 		sc.Conditions = append(sc.Conditions, osv1alpha1.Condition{
-			Status:             condition.Status,
+			Status:             state,
 			LastTransitionTime: condition.LastTransitionTime,
 			Message:            condition.Message,
 			Reason:             condition.Reason,
 		})
-
 	}
 	return sc
 }

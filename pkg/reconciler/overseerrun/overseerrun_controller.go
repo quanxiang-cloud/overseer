@@ -226,6 +226,8 @@ func (r *OverseerRunReconciler) reconcileStep(ctx context.Context, step *v1alpha
 		return err
 	}
 
+	obj.SetLabels(osr.GetLabels())
+
 	obj.SetOwnerReferences(nil)
 	if !step.Separate {
 		if err := ctrl.SetControllerReference(osr, obj, r.Scheme); err != nil {

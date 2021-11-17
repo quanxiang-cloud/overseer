@@ -69,8 +69,12 @@ spec:
                         step.
                       type: string
                     name:
-                      description: Name is the name of this steo.
+                      description: Name is the name of this step.
                       type: string
+                    separate:
+                      description: Separate if separate is true,the resource is no
+                        longer under jurisdiction
+                      type: boolean
                     template:
                       description: Template declares yaml file of kubernetes resource
                       type: string

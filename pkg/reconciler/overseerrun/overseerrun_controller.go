@@ -227,9 +227,11 @@ func (r *OverseerRunReconciler) reconcileStep(ctx context.Context, step *v1alpha
 	}
 
 	obj.SetOwnerReferences(nil)
-	if err := ctrl.SetControllerReference(osr, obj, r.Scheme); err != nil {
-		log.Error(err, "Failed to SetControllerReference", "step", step.Name)
-		return err
+	if !step.Separate {
+		if err := ctrl.SetControllerReference(osr, obj, r.Scheme); err != nil {
+			log.Error(err, "Failed to SetControllerReference", "step", step.Name)
+			return err
+		}
 	}
 
 	if err = r.Create(ctx, obj); err != nil {

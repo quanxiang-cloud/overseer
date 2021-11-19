@@ -220,13 +220,12 @@ func (r *OverseerRunReconciler) reconcileStep(ctx context.Context, step *v1alpha
 		Param(osr.Spec.Params).
 		Do(materialsv1alpha1.WithNamespace(osr.Namespace),
 			materialsv1alpha1.WithAttachedGenerateName(osr.Name),
+			materialsv1alpha1.WithLables(osr.Labels),
 		)
 
 	if err != nil {
 		return err
 	}
-
-	obj.SetLabels(osr.GetLabels())
 
 	obj.SetOwnerReferences(nil)
 	if !step.Separate {

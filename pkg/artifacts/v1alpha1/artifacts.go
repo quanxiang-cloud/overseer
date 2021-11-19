@@ -20,13 +20,13 @@ func init() {
 	depot[corev1.SchemeGroupVersion.WithKind("ConfigMap")] = &ConfigMap{}
 	depot[corev1.SchemeGroupVersion.WithKind("PersistentVolume")] = &PersistentVolume{}
 	depot[corev1.SchemeGroupVersion.WithKind("PersistentVolumeClaim")] = &PersistentVolumeClaim{}
+	depot[corev1.SchemeGroupVersion.WithKind("Pod")] = &Pod{}
 
 	depot[appsv1.SchemeGroupVersion.WithKind("Deployment")] = &Deployment{}
 
 	depot[pipeline1beta1.SchemeGroupVersion.WithKind("TaskRun")] = &TaskRun{}
 	depot[pipeline1beta1.SchemeGroupVersion.WithKind("PipelineRun")] = &PipelineRun{}
 	depot[knativev1.SchemeGroupVersion.WithKind("Service")] = &KnativeService{}
-
 }
 
 func GetObj(gkv schema.GroupVersionKind) (client.Object, bool) {
@@ -187,7 +187,6 @@ func (p *PersistentVolumeClaim) GetCondition(obj client.Object) osv1alpha1.RefCo
 			Message:            condition.Message,
 			Reason:             condition.Reason,
 		})
-
 	}
 
 	return sc
@@ -215,7 +214,6 @@ func (t *TaskRun) GetCondition(obj client.Object) osv1alpha1.RefCondition {
 			Message:            condition.Message,
 			Reason:             condition.Reason,
 		})
-
 	}
 
 	return sc
@@ -242,7 +240,6 @@ func (p *PipelineRun) GetCondition(obj client.Object) osv1alpha1.RefCondition {
 			Message:            condition.Message,
 			Reason:             condition.Reason,
 		})
-
 	}
 	return sc
 }
@@ -268,7 +265,6 @@ func (k *KnativeService) GetCondition(obj client.Object) osv1alpha1.RefCondition
 			Message:            condition.Message,
 			Reason:             condition.Reason,
 		})
-
 	}
 
 	return sc
@@ -299,5 +295,52 @@ func (d *Deployment) GetCondition(obj client.Object) osv1alpha1.RefCondition {
 			Reason:             condition.Reason,
 		})
 	}
+	return sc
+}
+
+type Pod struct{}
+
+func (p *Pod) New() client.Object {
+	return &corev1.Pod{}
+}
+
+func (p *Pod) GetCondition(obj client.Object) osv1alpha1.RefCondition {
+	o := obj.(*corev1.Pod)
+
+	sc := osv1alpha1.RefCondition{
+		GroupVersionKind: o.GroupVersionKind().String(),
+	}
+
+	var state corev1.ConditionStatus
+
+	switch o.Status.Phase {
+	case corev1.PodRunning:
+		state = corev1.ConditionTrue
+	case corev1.PodFailed:
+		state = corev1.ConditionFalse
+	default:
+		state = corev1.ConditionUnknown
+	}
+
+	sc.Conditions = []osv1alpha1.Condition{
+		{
+			Status:             state,
+			LastTransitionTime: o.CreationTimestamp,
+		},
+	}
+
+	for _, condition := range o.Status.Conditions {
+		state := condition.Status
+		if condition.Reason == "ContainersNotReady" {
+			state = corev1.ConditionUnknown
+		}
+		sc.Conditions = append(sc.Conditions, osv1alpha1.Condition{
+			Status:             state,
+			LastTransitionTime: condition.LastTransitionTime,
+			Message:            condition.Message,
+			Reason:             condition.Reason,
+		})
+	}
+
 	return sc
 }

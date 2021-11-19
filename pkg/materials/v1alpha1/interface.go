@@ -37,3 +37,18 @@ func WithAttachedGenerateName(name string) Options {
 		obj.SetName("")
 	}
 }
+
+func WithLables(lables map[string]string) Options {
+	return func(obj client.Object) {
+		addLabels := obj.GetLabels()
+		if addLabels == nil {
+			addLabels = make(map[string]string)
+		}
+
+		for key, lable := range lables {
+			addLabels[key] = lable
+		}
+
+		obj.SetLabels(addLabels)
+	}
+}

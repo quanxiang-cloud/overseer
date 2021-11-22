@@ -12,4 +12,4 @@ package overseerrun
 //+kubebuilder:rbac:groups="apps",resources=deployments,verbs=get;list;watch;create;update;patch;delete
 
 //+kubebuilder:rbac:groups=tekton.dev,resources=pipelineruns;taskruns,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=serving.knative.dev,resources=service,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=get;list;watch;create;update;patch;delete

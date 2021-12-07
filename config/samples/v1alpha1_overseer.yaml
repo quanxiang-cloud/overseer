@@ -1,0 +1,31 @@
+apiVersion: quanxiang.cloud.io/v1alpha1
+kind: Overseer
+metadata:
+  name: overseer-sample
+spec:
+  serviceAccountName: default
+  volumes:
+    - name: share
+      persistentVolumeClaim:
+        claimName: demo
+  versatile:
+  # - name: pipeline
+  #   pipelineRun:
+  #     workspace:
+  #       - name: share
+  #     params:
+  #       - name: Foo
+  #         value: Bar
+  #     pipelineRef: pipeline-show
+  - name: build
+    builder:
+      git: 
+        url: https://github.com/wentevill/go
+        revision: main
+      image:
+        image: faas.pghost.cn/faas/demo:alpha1
+      shipwright:
+        strategy:
+          name: buildpacks
+          kind: BuildStrategy
+    

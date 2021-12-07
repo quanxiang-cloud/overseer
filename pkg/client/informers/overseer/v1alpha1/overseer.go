@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	overseerv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
+	overseerv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/apis/v1alpha1"
 	clientv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/client/clientset"
 	"github.com/quanxiang-cloud/overseer/pkg/client/informers"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

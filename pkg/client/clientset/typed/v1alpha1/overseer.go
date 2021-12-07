@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
+	"github.com/quanxiang-cloud/overseer/pkg/apis/v1alpha1"
 	"github.com/quanxiang-cloud/overseer/pkg/client/clientset/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -86,7 +86,7 @@ func (o *overseer) Create(ctx context.Context, overseer *v1alpha1.Overseer, opts
 	err = o.client.Post().
 		Namespace(o.ns).
 		Resource("overseers").
-		VersionedParams(&opts, scheme.ParameterCodec).
+		// VersionedParams(&opts, scheme.ParameterCodec).
 		Body(overseer).
 		Do(ctx).
 		Into(result)

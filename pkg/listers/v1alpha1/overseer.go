@@ -1,7 +1,7 @@
 package v1alpha1
 
 import (
-	"github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
+	"github.com/quanxiang-cloud/overseer/pkg/apis/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"

@@ -1,7 +1,7 @@
 package scheme
 
 import (
-	"github.com/quanxiang-cloud/overseer/pkg/api/v1alpha1"
+	"github.com/quanxiang-cloud/overseer/pkg/apis/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"

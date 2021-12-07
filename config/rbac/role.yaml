@@ -9,31 +9,7 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - configmaps
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - persistentvolumeclaims
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - persistentvolumes
+  - pods
   verbs:
   - create
   - delete
@@ -55,9 +31,9 @@ rules:
   - update
   - watch
 - apiGroups:
-  - apps
+  - quanxiang.cloud.io
   resources:
-  - deployments
+  - builders
   verbs:
   - create
   - delete
@@ -69,25 +45,13 @@ rules:
 - apiGroups:
   - quanxiang.cloud.io
   resources:
-  - overseerruns
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - quanxiang.cloud.io
-  resources:
-  - overseerruns/finalizers
+  - builders/finalizers
   verbs:
   - update
 - apiGroups:
   - quanxiang.cloud.io
   resources:
-  - overseerruns/status
+  - builders/status
   verbs:
   - get
   - patch
@@ -119,9 +83,50 @@ rules:
   - patch
   - update
 - apiGroups:
+  - quanxiang.cloud.io
+  resources:
+  - servings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - quanxiang.cloud.io
+  resources:
+  - servings/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - quanxiang.cloud.io
+  resources:
+  - servings/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - serving.knative.dev
   resources:
   - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - shipwright.io
+  resources:
+  - builders
+  - buildruns
+  - buildstrategies
+  - clusterbuildstrategies
   verbs:
   - create
   - delete

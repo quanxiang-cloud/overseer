@@ -42,7 +42,7 @@ const (
 	BuilderStage Stage = "builder"
 
 	// ServingStage serving stage
-	ServingStage Stage = "sering"
+	ServingStage Stage = "serving"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!

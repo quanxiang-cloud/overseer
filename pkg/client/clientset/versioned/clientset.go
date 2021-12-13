@@ -20,7 +20,7 @@ package versioned
 import (
 	"fmt"
 
-	quanxiangv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/client/clientset/versioned/typed/overseer/v1alpha1"
+	overseerv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/client/clientset/versioned/typed/overseer/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -28,19 +28,19 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	QuanxiangV1alpha1() quanxiangv1alpha1.QuanxiangV1alpha1Interface
+	OverseerV1alpha1() overseerv1alpha1.OverseerV1alpha1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	quanxiangV1alpha1 *quanxiangv1alpha1.QuanxiangV1alpha1Client
+	overseerV1alpha1 *overseerv1alpha1.OverseerV1alpha1Client
 }
 
-// QuanxiangV1alpha1 retrieves the QuanxiangV1alpha1Client
-func (c *Clientset) QuanxiangV1alpha1() quanxiangv1alpha1.QuanxiangV1alpha1Interface {
-	return c.quanxiangV1alpha1
+// OverseerV1alpha1 retrieves the OverseerV1alpha1Client
+func (c *Clientset) OverseerV1alpha1() overseerv1alpha1.OverseerV1alpha1Interface {
+	return c.overseerV1alpha1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -64,7 +64,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
-	cs.quanxiangV1alpha1, err = quanxiangv1alpha1.NewForConfig(&configShallowCopy)
+	cs.overseerV1alpha1, err = overseerv1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.quanxiangV1alpha1 = quanxiangv1alpha1.NewForConfigOrDie(c)
+	cs.overseerV1alpha1 = overseerv1alpha1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -89,7 +89,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.quanxiangV1alpha1 = quanxiangv1alpha1.New(c)
+	cs.overseerV1alpha1 = overseerv1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

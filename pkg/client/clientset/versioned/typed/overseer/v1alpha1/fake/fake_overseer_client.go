@@ -23,25 +23,25 @@ import (
 	testing "k8s.io/client-go/testing"
 )
 
-type FakeQuanxiangV1alpha1 struct {
+type FakeOverseerV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeQuanxiangV1alpha1) Builders(namespace string) v1alpha1.BuilderInterface {
+func (c *FakeOverseerV1alpha1) Builders(namespace string) v1alpha1.BuilderInterface {
 	return &FakeBuilders{c, namespace}
 }
 
-func (c *FakeQuanxiangV1alpha1) Overseers(namespace string) v1alpha1.OverseerInterface {
+func (c *FakeOverseerV1alpha1) Overseers(namespace string) v1alpha1.OverseerInterface {
 	return &FakeOverseers{c, namespace}
 }
 
-func (c *FakeQuanxiangV1alpha1) Servings(namespace string) v1alpha1.ServingInterface {
+func (c *FakeOverseerV1alpha1) Servings(namespace string) v1alpha1.ServingInterface {
 	return &FakeServings{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeQuanxiangV1alpha1) RESTClient() rest.Interface {
+func (c *FakeOverseerV1alpha1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

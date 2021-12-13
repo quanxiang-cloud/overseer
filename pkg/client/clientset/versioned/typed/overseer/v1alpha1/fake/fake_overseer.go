@@ -31,13 +31,13 @@ import (
 
 // FakeOverseers implements OverseerInterface
 type FakeOverseers struct {
-	Fake *FakeQuanxiangV1alpha1
+	Fake *FakeOverseerV1alpha1
 	ns   string
 }
 
-var overseersResource = schema.GroupVersionResource{Group: "quanxiang.cloud.io/v1alpha1", Version: "v1alpha1", Resource: "overseers"}
+var overseersResource = schema.GroupVersionResource{Group: "overseer.quanxiang.cloud.io", Version: "v1alpha1", Resource: "overseers"}
 
-var overseersKind = schema.GroupVersionKind{Group: "quanxiang.cloud.io/v1alpha1", Version: "v1alpha1", Kind: "Overseer"}
+var overseersKind = schema.GroupVersionKind{Group: "overseer.quanxiang.cloud.io", Version: "v1alpha1", Kind: "Overseer"}
 
 // Get takes name of the overseer, and returns the corresponding overseer object, and an error if there is any.
 func (c *FakeOverseers) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Overseer, err error) {

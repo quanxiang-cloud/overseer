@@ -31,13 +31,13 @@ import (
 
 // FakeServings implements ServingInterface
 type FakeServings struct {
-	Fake *FakeQuanxiangV1alpha1
+	Fake *FakeOverseerV1alpha1
 	ns   string
 }
 
-var servingsResource = schema.GroupVersionResource{Group: "quanxiang.cloud.io/v1alpha1", Version: "v1alpha1", Resource: "servings"}
+var servingsResource = schema.GroupVersionResource{Group: "overseer.quanxiang.cloud.io", Version: "v1alpha1", Resource: "servings"}
 
-var servingsKind = schema.GroupVersionKind{Group: "quanxiang.cloud.io/v1alpha1", Version: "v1alpha1", Kind: "Serving"}
+var servingsKind = schema.GroupVersionKind{Group: "overseer.quanxiang.cloud.io", Version: "v1alpha1", Kind: "Serving"}
 
 // Get takes name of the serving, and returns the corresponding serving object, and an error if there is any.
 func (c *FakeServings) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Serving, err error) {

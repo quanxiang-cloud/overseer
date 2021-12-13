@@ -61,13 +61,13 @@ func NewFilteredOverseerInformer(client versioned.Interface, namespace string, r
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.QuanxiangV1alpha1().Overseers(namespace).List(context.TODO(), options)
+				return client.OverseerV1alpha1().Overseers(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.QuanxiangV1alpha1().Overseers(namespace).Watch(context.TODO(), options)
+				return client.OverseerV1alpha1().Overseers(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&overseerv1alpha1.Overseer{},

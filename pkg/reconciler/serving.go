@@ -40,9 +40,9 @@ type ServingReconciler struct {
 	*materials.Service
 }
 
-//+kubebuilder:rbac:groups=quanxiang.cloud.io,resources=servings,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=quanxiang.cloud.io,resources=servings/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=quanxiang.cloud.io,resources=servings/finalizers,verbs=update
+//+kubebuilder:rbac:groups=overseer.quanxiang.cloud.io,resources=servings,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=overseer.quanxiang.cloud.io,resources=servings/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=overseer.quanxiang.cloud.io,resources=servings/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

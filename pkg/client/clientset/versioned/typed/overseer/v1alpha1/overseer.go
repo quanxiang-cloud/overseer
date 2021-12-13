@@ -55,7 +55,7 @@ type overseers struct {
 }
 
 // newOverseers returns a Overseers
-func newOverseers(c *QuanxiangV1alpha1Client, namespace string) *overseers {
+func newOverseers(c *OverseerV1alpha1Client, namespace string) *overseers {
 	return &overseers{
 		client: c.RESTClient(),
 		ns:     namespace,

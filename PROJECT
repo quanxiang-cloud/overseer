@@ -9,26 +9,26 @@ resources:
     namespaced: true
   controller: true
   domain: quanxiang.cloud.io
-  group: quanxiang.cloud.io
-  kind: Overseer
-  path: github.com/quanxiang-cloud/overseer/api/v1alpha1
-  version: v1alpha1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: quanxiang.cloud.io
-  group: quanxiang.cloud.io
-  kind: Builder
-  path: github.com/quanxiang-cloud/overseer/api/v1alpha1
-  version: v1alpha1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: quanxiang.cloud.io
-  group: quanxiang.cloud.io
+  group: overseer
   kind: Serving
-  path: github.com/quanxiang-cloud/overseer/api/v1alpha1
+  path: github.com/quanxiang-cloud/overseer/pkg/apis/overseer/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: quanxiang.cloud.io
+  group: overseer
+  kind: Serving
+  path: github.com/quanxiang-cloud/overseer/pkg/apis/overseer/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: quanxiang.cloud.io
+  group: overseer
+  kind: Serving
+  path: github.com/quanxiang-cloud/overseer/pkg/apis/overseer/v1alpha1
   version: v1alpha1
 version: "3"

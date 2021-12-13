@@ -61,13 +61,13 @@ func NewFilteredBuilderInformer(client versioned.Interface, namespace string, re
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.QuanxiangV1alpha1().Builders(namespace).List(context.TODO(), options)
+				return client.OverseerV1alpha1().Builders(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.QuanxiangV1alpha1().Builders(namespace).Watch(context.TODO(), options)
+				return client.OverseerV1alpha1().Builders(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&overseerv1alpha1.Builder{},

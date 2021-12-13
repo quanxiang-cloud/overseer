@@ -31,7 +31,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - quanxiang.cloud.io
+  - overseer.quanxiang.cloud.io
   resources:
   - builders
   verbs:
@@ -43,13 +43,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - quanxiang.cloud.io
+  - overseer.quanxiang.cloud.io
   resources:
   - builders/finalizers
   verbs:
   - update
 - apiGroups:
-  - quanxiang.cloud.io
+  - overseer.quanxiang.cloud.io
   resources:
   - builders/status
   verbs:
@@ -57,7 +57,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - quanxiang.cloud.io
+  - overseer.quanxiang.cloud.io
   resources:
   - overseers
   verbs:
@@ -69,13 +69,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - quanxiang.cloud.io
+  - overseer.quanxiang.cloud.io
   resources:
   - overseers/finalizers
   verbs:
   - update
 - apiGroups:
-  - quanxiang.cloud.io
+  - overseer.quanxiang.cloud.io
   resources:
   - overseers/status
   verbs:
@@ -83,7 +83,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - quanxiang.cloud.io
+  - overseer.quanxiang.cloud.io
   resources:
   - servings
   verbs:
@@ -95,13 +95,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - quanxiang.cloud.io
+  - overseer.quanxiang.cloud.io
   resources:
   - servings/finalizers
   verbs:
   - update
 - apiGroups:
-  - quanxiang.cloud.io
+  - overseer.quanxiang.cloud.io
   resources:
   - servings/status
   verbs:

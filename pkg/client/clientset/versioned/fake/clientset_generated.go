@@ -19,8 +19,8 @@ package fake
 
 import (
 	clientset "github.com/quanxiang-cloud/overseer/pkg/client/clientset/versioned"
-	quanxiangv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/client/clientset/versioned/typed/overseer/v1alpha1"
-	fakequanxiangv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/client/clientset/versioned/typed/overseer/v1alpha1/fake"
+	overseerv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/client/clientset/versioned/typed/overseer/v1alpha1"
+	fakeoverseerv1alpha1 "github.com/quanxiang-cloud/overseer/pkg/client/clientset/versioned/typed/overseer/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -75,7 +75,7 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 
 var _ clientset.Interface = &Clientset{}
 
-// QuanxiangV1alpha1 retrieves the QuanxiangV1alpha1Client
-func (c *Clientset) QuanxiangV1alpha1() quanxiangv1alpha1.QuanxiangV1alpha1Interface {
-	return &fakequanxiangv1alpha1.FakeQuanxiangV1alpha1{Fake: &c.Fake}
+// OverseerV1alpha1 retrieves the OverseerV1alpha1Client
+func (c *Clientset) OverseerV1alpha1() overseerv1alpha1.OverseerV1alpha1Interface {
+	return &fakeoverseerv1alpha1.FakeOverseerV1alpha1{Fake: &c.Fake}
 }

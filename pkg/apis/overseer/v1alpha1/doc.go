@@ -14,5 +14,5 @@ limitations under the License.
 // Package v1alpha1 contains API Schema definitions for the pipeline v1alpha1 API group
 
 // +k8s:deepcopy-gen=package
-// +groupName=quanxiang.cloud.io/v1alpha1
+// +groupName=overseer.quanxiang.cloud.io
 package v1alpha1

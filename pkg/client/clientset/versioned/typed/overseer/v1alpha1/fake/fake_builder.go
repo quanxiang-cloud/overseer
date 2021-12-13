@@ -31,13 +31,13 @@ import (
 
 // FakeBuilders implements BuilderInterface
 type FakeBuilders struct {
-	Fake *FakeQuanxiangV1alpha1
+	Fake *FakeOverseerV1alpha1
 	ns   string
 }
 
-var buildersResource = schema.GroupVersionResource{Group: "quanxiang.cloud.io/v1alpha1", Version: "v1alpha1", Resource: "builders"}
+var buildersResource = schema.GroupVersionResource{Group: "overseer.quanxiang.cloud.io", Version: "v1alpha1", Resource: "builders"}
 
-var buildersKind = schema.GroupVersionKind{Group: "quanxiang.cloud.io/v1alpha1", Version: "v1alpha1", Kind: "Builder"}
+var buildersKind = schema.GroupVersionKind{Group: "overseer.quanxiang.cloud.io", Version: "v1alpha1", Kind: "Builder"}
 
 // Get takes name of the builder, and returns the corresponding builder object, and an error if there is any.
 func (c *FakeBuilders) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Builder, err error) {

@@ -23,32 +23,32 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-type QuanxiangV1alpha1Interface interface {
+type OverseerV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	BuildersGetter
 	OverseersGetter
 	ServingsGetter
 }
 
-// QuanxiangV1alpha1Client is used to interact with features provided by the quanxiang.cloud.io/v1alpha1 group.
-type QuanxiangV1alpha1Client struct {
+// OverseerV1alpha1Client is used to interact with features provided by the overseer.quanxiang.cloud.io group.
+type OverseerV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *QuanxiangV1alpha1Client) Builders(namespace string) BuilderInterface {
+func (c *OverseerV1alpha1Client) Builders(namespace string) BuilderInterface {
 	return newBuilders(c, namespace)
 }
 
-func (c *QuanxiangV1alpha1Client) Overseers(namespace string) OverseerInterface {
+func (c *OverseerV1alpha1Client) Overseers(namespace string) OverseerInterface {
 	return newOverseers(c, namespace)
 }
 
-func (c *QuanxiangV1alpha1Client) Servings(namespace string) ServingInterface {
+func (c *OverseerV1alpha1Client) Servings(namespace string) ServingInterface {
 	return newServings(c, namespace)
 }
 
-// NewForConfig creates a new QuanxiangV1alpha1Client for the given config.
-func NewForConfig(c *rest.Config) (*QuanxiangV1alpha1Client, error) {
+// NewForConfig creates a new OverseerV1alpha1Client for the given config.
+func NewForConfig(c *rest.Config) (*OverseerV1alpha1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -57,12 +57,12 @@ func NewForConfig(c *rest.Config) (*QuanxiangV1alpha1Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &QuanxiangV1alpha1Client{client}, nil
+	return &OverseerV1alpha1Client{client}, nil
 }
 
-// NewForConfigOrDie creates a new QuanxiangV1alpha1Client for the given config and
+// NewForConfigOrDie creates a new OverseerV1alpha1Client for the given config and
 // panics if there is an error in the config.
-func NewForConfigOrDie(c *rest.Config) *QuanxiangV1alpha1Client {
+func NewForConfigOrDie(c *rest.Config) *OverseerV1alpha1Client {
 	client, err := NewForConfig(c)
 	if err != nil {
 		panic(err)
@@ -70,9 +70,9 @@ func NewForConfigOrDie(c *rest.Config) *QuanxiangV1alpha1Client {
 	return client
 }
 
-// New creates a new QuanxiangV1alpha1Client for the given RESTClient.
-func New(c rest.Interface) *QuanxiangV1alpha1Client {
-	return &QuanxiangV1alpha1Client{c}
+// New creates a new OverseerV1alpha1Client for the given RESTClient.
+func New(c rest.Interface) *OverseerV1alpha1Client {
+	return &OverseerV1alpha1Client{c}
 }
 
 func setConfigDefaults(config *rest.Config) error {
@@ -90,7 +90,7 @@ func setConfigDefaults(config *rest.Config) error {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *QuanxiangV1alpha1Client) RESTClient() rest.Interface {
+func (c *OverseerV1alpha1Client) RESTClient() rest.Interface {
 	if c == nil {
 		return nil
 	}

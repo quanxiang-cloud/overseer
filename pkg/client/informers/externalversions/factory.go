@@ -171,9 +171,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Quanxiang() overseer.Interface
+	Overseer() overseer.Interface
 }
 
-func (f *sharedInformerFactory) Quanxiang() overseer.Interface {
+func (f *sharedInformerFactory) Overseer() overseer.Interface {
 	return overseer.New(f, f.namespace, f.tweakListOptions)
 }

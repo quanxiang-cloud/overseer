@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: overseers.quanxiang.cloud.io/v1alpha1
+  name: overseers.overseer.quanxiang.cloud.io
 spec:
-  group: quanxiang.cloud.io/v1alpha1
+  group: overseer.quanxiang.cloud.io
   names:
     kind: Overseer
     listKind: OverseerList

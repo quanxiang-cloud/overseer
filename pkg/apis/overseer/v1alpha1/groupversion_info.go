@@ -16,7 +16,7 @@ limitations under the License.
 
 // Package v1alpha1 contains API Schema definitions for the overseer v1alpha1 API group
 //+kubebuilder:object:generate=true
-//+groupName=quanxiang.cloud.io
+//+groupName=overseer.quanxiang.cloud.io
 package v1alpha1
 
 import (
@@ -27,7 +27,7 @@ import (
 
 var (
 	// GroupVersion is group version used to register these objects
-	GroupVersion = schema.GroupVersion{Group: "quanxiang.cloud.io", Version: "v1alpha1"}
+	GroupVersion = schema.GroupVersion{Group: "overseer.uanxiang.cloud.io", Version: "v1alpha1"}
 
 	// SchemeGroupVersion is group version used to register these objects
 	// added for generated clientset

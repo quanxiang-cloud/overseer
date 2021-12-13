@@ -55,7 +55,7 @@ type servings struct {
 }
 
 // newServings returns a Servings
-func newServings(c *QuanxiangV1alpha1Client, namespace string) *servings {
+func newServings(c *OverseerV1alpha1Client, namespace string) *servings {
 	return &servings{
 		client: c.RESTClient(),
 		ns:     namespace,

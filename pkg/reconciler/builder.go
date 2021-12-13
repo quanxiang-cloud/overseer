@@ -39,9 +39,9 @@ type BuilderReconciler struct {
 	*materials.Shipwright
 }
 
-//+kubebuilder:rbac:groups=quanxiang.cloud.io,resources=builders,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=quanxiang.cloud.io,resources=builders/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=quanxiang.cloud.io,resources=builders/finalizers,verbs=update
+//+kubebuilder:rbac:groups=overseer.quanxiang.cloud.io,resources=builders,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=overseer.quanxiang.cloud.io,resources=builders/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=overseer.quanxiang.cloud.io,resources=builders/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

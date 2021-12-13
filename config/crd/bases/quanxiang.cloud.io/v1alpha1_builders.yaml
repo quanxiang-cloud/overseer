@@ -1,0 +1,182 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: builders.quanxiang.cloud.io/v1alpha1
+spec:
+  group: quanxiang.cloud.io/v1alpha1
+  names:
+    kind: Builder
+    listKind: BuilderList
+    plural: builders
+    singular: builder
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.ref
+      name: Ref
+      type: string
+    - jsonPath: .status.status
+      name: Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Builder is the Schema for the builders API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: BuilderSpec defines the desired state of Builder
+            properties:
+              git:
+                description: Git
+                properties:
+                  credentials:
+                    description: Credentials
+                    properties:
+                      name:
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        type: string
+                    type: object
+                  revision:
+                    description: Revision to checkout. (branch, tag, sha, ref, etc...)
+                    type: string
+                  subpath:
+                    description: Subpath A subpath within checked out source where
+                      the source to build is located.
+                    type: string
+                  url:
+                    description: Repository URL to clone from.
+                    type: string
+                type: object
+              image:
+                description: Image
+                properties:
+                  credentials:
+                    description: Credentials
+                    properties:
+                      name:
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        type: string
+                    type: object
+                  image:
+                    description: Docker image name.
+                    type: string
+                required:
+                - image
+                type: object
+              params:
+                description: Param
+                items:
+                  description: Param is a key/value that populates a strategy parameter
+                  properties:
+                    name:
+                      type: string
+                    value:
+                      type: string
+                  type: object
+                type: array
+              serviceAccountName:
+                description: ServiceAccountName
+                type: string
+              shipwright:
+                description: Shipwright more info https://github.com/shipwright-io/build
+                properties:
+                  strategy:
+                    description: Strategy references the BuildStrategy to use to build
+                      the container image.
+                    properties:
+                      kind:
+                        description: BuildStrategyKind indicates the kind of the buildstrategy,
+                          namespaced or cluster scoped.
+                        type: string
+                      name:
+                        description: 'Name of the referent; More info: http://kubernetes.io/docs/user-guide/identifiers#names'
+                        type: string
+                    required:
+                    - name
+                    type: object
+                type: object
+            type: object
+          status:
+            description: BuilderStatus defines the observed state of Builder
+            properties:
+              completionTime:
+                description: CompletionTime is the time the task completed.
+                format: date-time
+                type: string
+              conditions:
+                description: Conditions the latest available observations of a resource's
+                  current state.
+                items:
+                  description: Condition defines a readiness condition.
+                  properties:
+                    lastTransitionTime:
+                      description: LastTransitionTime is the last time the condition
+                        transitioned from one status to another. We use VolatileTime
+                        in place of metav1.Time to exclude this from creating equality.Semantic
+                        differences (all other things held constant).
+                      format: date-time
+                      type: string
+                    message:
+                      description: A human readable message indicating details about
+                        the transition.
+                      type: string
+                    reason:
+                      description: The reason for the condition's last transition.
+                      type: string
+                    status:
+                      description: Status of the condition, one of True, False, Unknown.
+                      type: string
+                    type:
+                      description: Type of condition
+                      type: string
+                  required:
+                  - status
+                  - type
+                  type: object
+                type: array
+              ref:
+                description: Ref the name of builder.
+                type: string
+              startTime:
+                description: StartTime is the time the task is actually started.
+                format: date-time
+                type: string
+              status:
+                description: Status of the condition, one of True, False, Unknown.
+                type: string
+            required:
+            - status
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

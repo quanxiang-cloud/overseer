@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	v1alpha1 "github.com/quanxiang-cloud/overseer/pkg/apis/v1alpha1"
+	v1alpha1 "github.com/quanxiang-cloud/overseer/pkg/apis/overseer/v1alpha1"
 	"github.com/quanxiang-cloud/overseer/pkg/materials"
 )
 

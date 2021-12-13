@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	v1alpha1 "github.com/quanxiang-cloud/overseer/pkg/apis/v1alpha1"
+	v1alpha1 "github.com/quanxiang-cloud/overseer/pkg/apis/overseer/v1alpha1"
 	pipelinev1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"

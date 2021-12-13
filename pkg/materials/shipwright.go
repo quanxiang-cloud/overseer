@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/quanxiang-cloud/overseer/pkg/apis/v1alpha1"
+	"github.com/quanxiang-cloud/overseer/pkg/apis/overseer/v1alpha1"
 	shipwrightv1alpha1 "github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"

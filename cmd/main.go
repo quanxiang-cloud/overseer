@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	v1alpha1 "github.com/quanxiang-cloud/overseer/pkg/apis/v1alpha1"
+	v1alpha1 "github.com/quanxiang-cloud/overseer/pkg/apis/overseer/v1alpha1"
 	"github.com/quanxiang-cloud/overseer/pkg/controllers"
 
 	//+kubebuilder:scaffold:imports

@@ -74,6 +74,7 @@ func (r *Serving) createServing(ctx context.Context, osr *v1alpha1.Overseer, vst
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      genName(osr.Name, vst.Name),
 			Namespace: osr.Namespace,
+			Labels:    osr.Labels,
 		},
 		Spec: *servingSpec.DeepCopy(),
 	}

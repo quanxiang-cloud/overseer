@@ -81,6 +81,7 @@ func (r *PipelineRun) createPipeline(ctx context.Context, osr *v1alpha1.Overseer
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      genName(osr.Name, vst.Name),
 			Namespace: osr.Namespace,
+			Labels:    osr.Labels,
 		},
 		Spec: pipelinev1beta1.PipelineRunSpec{
 			PipelineRef: &pipelinev1beta1.PipelineRef{

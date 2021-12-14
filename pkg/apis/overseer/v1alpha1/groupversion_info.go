@@ -27,7 +27,7 @@ import (
 
 var (
 	// GroupVersion is group version used to register these objects
-	GroupVersion = schema.GroupVersion{Group: "overseer.uanxiang.cloud.io", Version: "v1alpha1"}
+	GroupVersion = schema.GroupVersion{Group: "overseer.quanxiang.cloud.io", Version: "v1alpha1"}
 
 	// SchemeGroupVersion is group version used to register these objects
 	// added for generated clientset

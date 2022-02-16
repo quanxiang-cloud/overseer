@@ -2,6 +2,7 @@ package materials
 
 import (
 	"context"
+	"sort"
 	"strings"
 	"time"
 
@@ -51,6 +52,10 @@ func (r *PipelineRun) Reconcile(ctx context.Context, osr *v1alpha1.Overseer, vst
 	status.StartTime = metav1.NewTime(time.Now())
 	status.Status = corev1.ConditionUnknown
 
+	pipelineRuns := v1alpha1.PipelineRuns{}
+	pipelineRuns.Ref = pplr.Name
+	pipelineRuns.Status = corev1.ConditionUnknown
+
 	cond := pplr.GetStatusCondition().GetCondition(knativeapi.ConditionSucceeded)
 	if cond != nil {
 		status.Conditions = v1alpha1.Conditions{
@@ -63,13 +68,47 @@ func (r *PipelineRun) Reconcile(ctx context.Context, osr *v1alpha1.Overseer, vst
 			},
 		}
 		status.Status = cond.Status
+		pipelineRuns.Status = cond.Status
 	}
 
 	if status.Status == corev1.ConditionFalse {
 		osr.Status.SetFalse()
 	}
 
+	tasks := pplr.Status.PipelineRunStatusFields.TaskRuns
+	for _, task := range tasks {
+		taskRuns := v1alpha1.TaskRuns{
+			Name:           task.PipelineTaskName,
+			CompletionTime: task.Status.GetCondition(knativeapi.ConditionSucceeded).LastTransitionTime.Inner,
+			Steps:          make([]v1alpha1.Steps, 0, len(task.Status.Steps)),
+		}
+		if task.Status != nil {
+			taskRuns.StartTime = *task.Status.StartTime
+		}
+
+		taskCond := task.Status.GetCondition(knativeapi.ConditionSucceeded)
+		if taskCond != nil {
+			taskRuns.Status = taskCond.Status
+		}
+		for _, element := range task.Status.Steps {
+			step := v1alpha1.Steps{Name: element.Name}
+			if element.Terminated != nil {
+				step.StartTime = element.Terminated.StartedAt
+				step.CompletionTime = element.Terminated.FinishedAt
+			}
+			taskRuns.Steps = append(taskRuns.Steps, step)
+		}
+
+		pipelineRuns.CompletionTime = metav1.NewTime(time.Now())
+		pipelineRuns.TaskRuns = append(pipelineRuns.TaskRuns, taskRuns)
+	}
+
+	sort.SliceStable(pipelineRuns.TaskRuns, func(i, j int) bool {
+		return pipelineRuns.TaskRuns[i].StartTime.Before(&pipelineRuns.TaskRuns[j].StartTime)
+	})
+
 	osr.Status.SetVersatileStatus(status)
+	osr.Status.SetPipelineRuns(pipelineRuns)
 	return nil
 }
 

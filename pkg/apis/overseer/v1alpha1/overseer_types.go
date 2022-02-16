@@ -167,6 +167,40 @@ func NewPhase(label string, stage Stage) Phase {
 	}
 }
 
+type PipelineRuns struct {
+	// Ref the name of the related task.
+	// +require
+	Ref string `json:"ref,omitempty"`
+
+	// StartTime is the time the task is actually started.
+	// +optional
+	StartTime metav1.Time `json:"startTime,omitempty"`
+
+	// CompletionTime is the time the task completed.
+	// +optional
+	CompletionTime metav1.Time `json:"completionTime,omitempty"`
+
+	// Status of the condition, one of True, False, Unknown.
+	// +required
+	Status corev1.ConditionStatus `json:"status" description:"status of the condition, one of True, False, Unknown"`
+
+	TaskRuns []TaskRuns `json:"taskRuns,omitempty"`
+}
+
+type TaskRuns struct {
+	Name           string                 `json:"name,omitempty"`
+	StartTime      metav1.Time            `json:"startTime,omitempty"`
+	CompletionTime metav1.Time            `json:"completionTime,omitempty"`
+	Status         corev1.ConditionStatus `json:"status,omitempty"`
+	Steps          []Steps                `json:"steps,omitempty"`
+}
+
+type Steps struct {
+	Name           string      `json:"name,omitempty"`
+	StartTime      metav1.Time `json:"startTime,omitempty"`
+	CompletionTime metav1.Time `json:"completionTime,omitempty"`
+}
+
 // OverseerStatus defines the observed state of Overseer
 type OverseerStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
@@ -188,6 +222,9 @@ type OverseerStatus struct {
 
 	// +optional
 	VersatileStatus []VersatileStatus `json:"versatileStatus,omitempty"`
+
+	// +optional
+	PipelineRuns PipelineRuns `json:"pipelineRun,omitempty"`
 }
 
 func (o *OverseerStatus) SetVersatileStatus(vs VersatileStatus) {
@@ -202,6 +239,10 @@ func (o *OverseerStatus) SetVersatileStatus(vs VersatileStatus) {
 	}
 
 	o.VersatileStatus = append(o.VersatileStatus, vs)
+}
+
+func (o *OverseerStatus) SetPipelineRuns(pr PipelineRuns) {
+	o.PipelineRuns = pr
 }
 
 // SetFalse If any one task fails, the overall failure.
@@ -311,7 +352,7 @@ func (o *Overseer) GetVersatile() *Versatile {
 	return nil
 }
 
-// IsDone if status is unkonwn where return false
+// IsDone if status is unknown where return false
 func (o *Overseer) IsDone() bool {
 	return !o.Status.IsUnkonwn()
 }
@@ -329,7 +370,7 @@ func (o *Overseer) ShoudContinue() bool {
 
 	if len(o.Status.VersatileStatus) == 0 ||
 		o.Status.VersatileStatus[len(o.Status.VersatileStatus)-1].IsFinish() {
-		//get the index of the next task
+		// get the index of the next task
 		nextPhase := o.getNextPhase()
 		if nextPhase == DonePhase {
 			return false

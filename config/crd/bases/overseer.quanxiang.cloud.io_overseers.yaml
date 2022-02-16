@@ -16356,6 +16356,53 @@ spec:
                     description: Stage the task it is performing
                     type: string
                 type: object
+              pipelineRun:
+                properties:
+                  completionTime:
+                    description: CompletionTime is the time the task completed.
+                    format: date-time
+                    type: string
+                  ref:
+                    description: Ref the name of the related task.
+                    type: string
+                  startTime:
+                    description: StartTime is the time the task is actually started.
+                    format: date-time
+                    type: string
+                  status:
+                    description: Status of the condition, one of True, False, Unknown.
+                    type: string
+                  taskRuns:
+                    items:
+                      properties:
+                        completionTime:
+                          format: date-time
+                          type: string
+                        name:
+                          type: string
+                        startTime:
+                          format: date-time
+                          type: string
+                        status:
+                          type: string
+                        steps:
+                          items:
+                            properties:
+                              completionTime:
+                                format: date-time
+                                type: string
+                              name:
+                                type: string
+                              startTime:
+                                format: date-time
+                                type: string
+                            type: object
+                          type: array
+                      type: object
+                    type: array
+                required:
+                - status
+                type: object
               startTime:
                 description: StartTime is the time the task is actually started.
                 format: date-time
